@@ -130,7 +130,7 @@ const styles = `
   #rdm-watermark {
     position: absolute;
     bottom: 20px;
-    right: 80px;
+    right: 20px;
     font-family: 'Ledger', serif;
     font-size: 20px;
     color: white;
@@ -161,13 +161,43 @@ const styles = `
     -webkit-text-fill-color: transparent;
   }
 
-  /* ── Search wrapper ── */
+  /* ── Search wrapper — desktop: top left, mobile: below badge ── */
   #rdm-search-wrap {
     position: absolute;
     top: 20px;
     left: 20px;
     width: 340px;
     z-index: 1000;
+  }
+
+  @media (max-width: 640px) {
+    #rdm-search-wrap {
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100vw - 40px);
+      max-width: 340px;
+    }
+    #rdm-watermark {
+      font-size: 14px;
+      bottom: 12px;
+      right: 12px;
+    }
+    #rdm-badge {
+      padding: 8px 18px;
+    }
+    #rdm-badge span {
+      font-size: 14px;
+    }
+    .leaflet-popup {
+      max-width: 92vw !important;
+    }
+    .leaflet-popup-content-wrapper {
+      max-width: 92vw !important;
+    }
+    .leaflet-popup-content {
+      margin: 10px !important;
+    }
   }
 
   #rdm-search-box {
