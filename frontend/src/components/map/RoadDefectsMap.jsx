@@ -129,10 +129,10 @@ const styles = `
   /* ── Watermark ── */
   #rdm-watermark {
     position: absolute;
-    bottom: 20px;
-    right: 20px;
+    bottom: 40px;
+    right: 50px;
     font-family: 'Ledger', serif;
-    font-size: 20px;
+    font-size: 24px;
     color: white;
     letter-spacing: 1px;
     pointer-events: none;
@@ -310,7 +310,53 @@ const styles = `
     color: white;
   }
 
-  /* Leaflet popup dark theme */
+  /* ── Refresh button ── */
+  #rdm-refresh {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    height: 42px;
+    padding: 0 16px;
+    border-radius: 22px;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(168,85,247,0.4);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: border-color 0.2s, background 0.2s;
+    white-space: nowrap;
+  }
+  #rdm-refresh:hover {
+    background: rgba(168,85,247,0.15);
+    border-color: rgba(168,85,247,0.8);
+  }
+  #rdm-refresh:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  #rdm-refresh .spin {
+    display: inline-block;
+    animation: rdm-spin 0.8s linear infinite;
+  }
+  @keyframes rdm-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  @media (max-width: 640px) {
+    #rdm-refresh {
+      top: 20px;
+      right: 12px;
+      height: 36px;
+      padding: 0 12px;
+      font-size: 12px;
+    }
+  }
   .leaflet-popup-content-wrapper {
     background: #12121a !important;
     border: 1px solid rgba(255,255,255,0.1) !important;
@@ -579,6 +625,28 @@ export default function RoadDefectsMap() {
     mapRef.current?.setView([lat, lon], 14, { animate: true, duration: 1.5 });
   }, []);
 
+  // ── Refresh — clears all caches and redraws current viewport ──────────────
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    const map = mapRef.current;
+    if (!map || refreshing) return;
+    setRefreshing(true);
+
+    // Remove all hex layers from map
+    Object.values(layerCacheRef.current).forEach((layer) => map.removeLayer(layer));
+
+    // Clear all caches
+    layerCacheRef.current  = {};
+    eventCacheRef.current  = {};
+    imageCacheRef.current  = {};
+    fetchedCells.current   = new Set();
+    isFetchingRef.current  = false;
+
+    await loadViewport();
+    setRefreshing(false);
+  }, [refreshing, loadViewport]);
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
@@ -587,6 +655,11 @@ export default function RoadDefectsMap() {
         <div id="rdm-map" ref={mapDivRef} />
         <SearchBar onSelect={handleSearchSelect} />
         <div id="rdm-badge"><span>road explorer</span></div>
+        <button id="rdm-refresh" onClick={handleRefresh} disabled={refreshing}>
+          {refreshing
+            ? <><span className="spin">↻</span> Refreshing…</>
+            : <>↻ Refresh</>}
+        </button>
         <div id="rdm-watermark">vehnicate</div>
       </div>
     </>
