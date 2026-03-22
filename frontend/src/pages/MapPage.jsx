@@ -1,22 +1,23 @@
-//import MapHeader from "../components/common/MapHeader"
+import RoadDefectsMap from "../components/map/RoadDefectsMap"
+
+const FOOTER_HEIGHT = 64 // matches h-16 = 4rem = 64px
 
 const MapPage = () => {
   return (
     <div className="h-screen flex flex-col bg-black overflow-hidden">
 
-      {/* Map */}
-      <div className="flex-1">
-        <iframe
-          src="/map.html"
-          title="Road Explorer Map"
-          className="w-full h-full border-none"
-        />
+      {/* Map — explicit height so Leaflet gets real pixels */}
+      <div
+        className="relative"
+        style={{ height: `calc(100vh - ${FOOTER_HEIGHT}px)` }}
+      >
+        <RoadDefectsMap />
       </div>
 
       {/* Footer */}
       <footer className="h-16 bg-black border-t border-purple-500/20 flex items-center justify-center text-center px-4">
         <p className="text-gray-400 text-sm md:text-base">
-          Don’t find your place?{" "}
+          Don't find your place?{" "}
           <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent font-medium">
             Download the hn-ainro app
           </span>{" "}
