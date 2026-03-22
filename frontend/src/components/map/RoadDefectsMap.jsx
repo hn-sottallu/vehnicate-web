@@ -275,6 +275,35 @@ const styles = `
     overflow: hidden;
   }
 
+  /*
+    Pure CSS infinite scroll — no JS needed.
+    6 items (5 cities + clone of first) × 20px = 120px total height.
+    Each city shows for 2.5s, smooth scroll takes 0.6s.
+    Total = 6 × 3.1s ≈ 18.6s per full cycle.
+    Keyframes: pause at each city, then smoothly scroll to next.
+  */
+  #rdm-city-inner {
+    display: flex;
+    flex-direction: column;
+    animation: rdm-scroll 18.6s infinite;
+  }
+
+  @keyframes rdm-scroll {
+    0%         { transform: translateY(0px); }
+    13.4%      { transform: translateY(0px); }
+    16.7%      { transform: translateY(-20px); }
+    29.9%      { transform: translateY(-20px); }
+    33.2%      { transform: translateY(-40px); }
+    46.4%      { transform: translateY(-40px); }
+    49.7%      { transform: translateY(-60px); }
+    62.9%      { transform: translateY(-60px); }
+    66.2%      { transform: translateY(-80px); }
+    79.4%      { transform: translateY(-80px); }
+    82.7%      { transform: translateY(-100px); }
+    96.2%      { transform: translateY(-100px); }
+    100%       { transform: translateY(0px); }
+  }
+
   #rdm-city-inner span {
     height: 20px;
     line-height: 20px;
@@ -380,54 +409,7 @@ function SearchBar({ onSelect }) {
   const [query,   setQuery]   = useState("");
   const [results, setResults] = useState([]);
   const [focused, setFocused] = useState(false);
-  const [cityIdx, setCityIdx] = useState(0);
-  const innerRef  = useRef(null);
-  const timerRef  = useRef(null);
-  const isResetting = useRef(false);
-
-  // ── Seamless cyclic rotation ───────────────────────────────────────────────
-  // List is [A, B, C, D, E, A(clone)].
-  // We animate 0→1→2→3→4→5(clone of A).
-  // When we land on index 5 (the clone), we wait for the transition to finish,
-  // then silently (no transition) snap back to index 0 (real A).
-  // User sees: …D → E → A → B… with no jump.
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (isResetting.current) return;
-      setCityIdx((prev) => prev + 1);
-    }, 2500);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    const el = innerRef.current;
-    if (!el) return;
-
-    if (cityIdx === CITIES_LOOP.length - 1) {
-      // Animate to clone (last item)
-      el.style.transition = "transform 0.6s ease-in-out";
-      el.style.transform  = `translateY(-${cityIdx * 20}px)`;
-
-      // After animation completes, snap silently back to index 0
-      const timeout = setTimeout(() => {
-        isResetting.current = true;
-        el.style.transition = "none";
-        el.style.transform  = "translateY(0px)";
-        setCityIdx(0);
-        // Re-enable transitions after a frame
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            isResetting.current = false;
-          });
-        });
-      }, 650); // slightly longer than transition duration
-
-      return () => clearTimeout(timeout);
-    } else {
-      el.style.transition = "transform 0.6s ease-in-out";
-      el.style.transform  = `translateY(-${cityIdx * 20}px)`;
-    }
-  }, [cityIdx]);
+  const timerRef = useRef(null);
 
   // ── Geocode with Nominatim ─────────────────────────────────────────────────
   const search = useCallback(async (q) => {
@@ -473,11 +455,12 @@ function SearchBar({ onSelect }) {
           onBlur={() => setTimeout(() => setFocused(false), 200)}
           autoComplete="off"
         />
+        {/* Animated placeholder — hidden when focused or has value */}
         {!focused && !query && (
           <div id="rdm-placeholder">
             <span>Search</span>
             <div id="rdm-city-rotator">
-              <div id="rdm-city-inner" ref={innerRef} style={{ display: "flex", flexDirection: "column" }}>
+              <div id="rdm-city-inner">
                 {CITIES_LOOP.map((c, i) => (
                   <span key={i}>{c}</span>
                 ))}
@@ -637,15 +620,39 @@ export default function RoadDefectsMap() {
     Object.values(layerCacheRef.current).forEach((layer) => map.removeLayer(layer));
 
     // Clear all caches
-    layerCacheRef.current  = {};
-    eventCacheRef.current  = {};
-    imageCacheRef.current  = {};
-    fetchedCells.current   = new Set();
-    isFetchingRef.current  = false;
+    layerCacheRef.current = {};
+    eventCacheRef.current = {};
+    imageCacheRef.current = {};
+    fetchedCells.current  = new Set();
+    isFetchingRef.current = false;
 
-    await loadViewport();
+    // Directly fetch fresh data — avoids stale closure in loadViewport
+    try {
+      const cells     = boundsToH3Cells(map.getBounds());
+      const newEvents = await fetchEventsForCells(cells, fetchedCells.current);
+      cells.forEach((c) => fetchedCells.current.add(c));
+
+      if (newEvents.length) {
+        const newImages = await fetchImagesForEvents(newEvents.map((e) => e.id));
+        Object.assign(imageCacheRef.current, newImages);
+
+        const byHex = {};
+        for (const ev of newEvents) {
+          if (!ev.h3_index) continue;
+          if (!byHex[ev.h3_index]) byHex[ev.h3_index] = [];
+          byHex[ev.h3_index].push(ev);
+        }
+        for (const [hexId, events] of Object.entries(byHex)) {
+          eventCacheRef.current[hexId] = events;
+          drawHex(hexId, events);
+        }
+      }
+    } catch (err) {
+      console.error("[refresh]", err);
+    }
+
     setRefreshing(false);
-  }, [refreshing, loadViewport]);
+  }, [refreshing]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
