@@ -187,7 +187,7 @@ class AlivRoadDefects:
             .reset_index(drop=True)
         )
 
-        df_resampled['time_ms'] = df_resampled['timestamp'].view('int64') // 10**6
+        df_resampled['time_ms'] = df_resampled['timestamp'].astype('int64') // 10**6
         df = df_resampled
 
         filt_pitch = self.butter_bandpass(df['Pitch'].values, 0.56, 1)
