@@ -157,7 +157,9 @@ class AlivRoadDefects:
     # ==========================================================
 
     def analyze_batch(self, rows):
+        print("Rows received:", len(rows))
         if not rows:
+            print('no rows received!!!')
             return {'speedbreakers': []}
 
         df = self._rows_to_df(rows)
@@ -240,7 +242,6 @@ class AlivRoadDefects:
             norm = (params - params.min()) / (params.max() - params.min())
             for i, e in enumerate(events):
                 e['parameter'] = float(norm[i])
-        print("Rows received:", len(rows))
         print("filt_pitch length before trim:", len(filt_pitch))
         print("std of filt_pitch:", s)
         print("chunks count:", len(chunks))
