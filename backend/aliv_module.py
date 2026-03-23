@@ -240,5 +240,8 @@ class AlivRoadDefects:
             norm = (params - params.min()) / (params.max() - params.min())
             for i, e in enumerate(events):
                 e['parameter'] = float(norm[i])
-
+        print("Rows received:", len(rows))
+        print("filt_pitch length before trim:", len(filt_pitch))
+        print("std of filt_pitch:", s)
+        print("chunks count:", len(chunks))
         return {'speedbreakers': events}

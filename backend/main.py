@@ -94,7 +94,8 @@ def aliv_roadDefects(rows):
     aliv = AlivRoadDefects(verbose=False, fs=80)
 
     result = aliv.analyze_batch(rows)
-
+    print("ALIv result:", result)
+    print("Speedbreakers found:", len(result.get("speedbreakers", [])))
     return result
 
 def process_trip(tripid,vehicleid, starttime, endtime):
