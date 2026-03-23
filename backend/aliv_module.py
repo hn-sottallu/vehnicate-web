@@ -193,7 +193,8 @@ class AlivRoadDefects:
         df = df_resampled
 
         filt_pitch = self.butter_bandpass(df['Pitch'].values, 0.56, 1)
-
+        print("filt_pitch length:", len(filt_pitch))  # ← add here
+        print("df length after resample:", len(df))
         if len(filt_pitch) < 100:
             return {'speedbreakers': []}
 
@@ -205,7 +206,10 @@ class AlivRoadDefects:
 
         chunks = self.Chunking(df_f, 'Pitch', 'gyro_y')
         s = np.std(filt_pitch)
-
+        print("filt_pitch length after trim:", len(filt_pitch))
+        print("std of filt_pitch:", s)
+        print("chunks count:", len(chunks))
+        print("initialLat:", initialLat, "initialLon:", initialLon)
         events, buf, active = [], [], False
 
         raw_time = df['time_ms'].values
@@ -242,7 +246,4 @@ class AlivRoadDefects:
             norm = (params - params.min()) / (params.max() - params.min())
             for i, e in enumerate(events):
                 e['parameter'] = float(norm[i])
-        print("filt_pitch length before trim:", len(filt_pitch))
-        print("std of filt_pitch:", s)
-        print("chunks count:", len(chunks))
         return {'speedbreakers': events}
