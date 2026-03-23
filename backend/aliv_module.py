@@ -46,7 +46,7 @@ class AlivRoadDefects:
     def _rows_to_df(self, rows):
         rows = [self._normalize_row_keys(r) for r in rows]
         df = pd.DataFrame(rows)
-
+        print("Sample timesent values:", df['timesent'].head(3).tolist())
         ts = pd.to_datetime(df['timesent'], errors='coerce')
         ms = ts.astype('int64') // 10**6
         base = ms.iloc[0]
