@@ -163,6 +163,10 @@ class AlivRoadDefects:
             return {'speedbreakers': []}
 
         df = self._rows_to_df(rows)
+        print("time_ms first 5:", df['time_ms'].head().tolist())
+        print("time_ms last 5:", df['time_ms'].tail().tolist())
+        print("time_ms dtype:", df['time_ms'].dtype)
+        print("NaT in timesent:", df['timesent'].isna().sum())
         df = self.phone_to_vehicle(df)
 
         initialLat = round(df[(df.latitude != 0) & (df.longitude != 0)].iloc[0]['latitude'],4)
