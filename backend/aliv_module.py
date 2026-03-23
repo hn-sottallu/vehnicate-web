@@ -47,7 +47,7 @@ class AlivRoadDefects:
         rows = [self._normalize_row_keys(r) for r in rows]
         df = pd.DataFrame(rows)
 
-        ts = pd.to_datetime(df['timesent'], format='ISO8601', errors='coerce')
+        ts = pd.to_datetime(df['timesent'], errors='coerce', utc=True)
         ms = ts.astype('int64') // 10**6
         base = ms.iloc[0]
         df['time_ms'] = (ms - base).astype(int)
