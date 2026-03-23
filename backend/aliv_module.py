@@ -248,7 +248,7 @@ class AlivRoadDefects:
                         events.append({'start_time': ts, 'end_time': te, 'parameter': p})
 
                 buf, active = [], False
-
+        print("number of events: ",len(events))
         if len(events) > 1:
             params = np.log1p([e['parameter'] for e in events])
             norm = (params - params.min()) / (params.max() - params.min())

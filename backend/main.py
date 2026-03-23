@@ -152,6 +152,7 @@ def process_trip(tripid,vehicleid, starttime, endtime):
         return
     
     enriched_events = enrich_events(tripid, vehicleid, result, df)
+    print("number of enriched events", enriched_events)
     if enriched_events:
         #supabase_target.table("roaddefects").insert(enriched_events).execute()
         # Step 1: Insert and get IDs
