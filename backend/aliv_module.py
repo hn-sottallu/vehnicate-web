@@ -47,10 +47,12 @@ class AlivRoadDefects:
         rows = [self._normalize_row_keys(r) for r in rows]
         df = pd.DataFrame(rows)
 
-        #ts = pd.to_datetime(df['timesent'], errors='coerce', utc=True)
+        ts = pd.to_datetime(df['timesent'], errors='coerce', utc=True)
         #ms = ts.astype('int64') // 10**6
         #base = ms.iloc[0]
-        df['time_ms'] = df['time_ms'] - df['time_ms'].iloc[0]
+        #df['time_ms'] = (ms - base).astype(int)
+        df['time_ms'] = (ts - ts.iloc[0]).dt.total_seconds() * 1000
+        df['time_ms'] = df['time_ms'].astype(int)
 
         print("time_ms first 5 after fix:", df['time_ms'].head().tolist())
         print("time_ms last 5 after fix:", df['time_ms'].tail().tolist())
