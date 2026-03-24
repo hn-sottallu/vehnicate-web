@@ -50,7 +50,7 @@ def enrich_events(tripid, vehicleid, result, df):
         start_time = event["start_time"]
         end_time = event["end_time"]
 
-        # 🔹 Filter raw data within time range
+        # Filter raw data within time range
         subset = df[
             (df["time_ms"] >= start_time) &
             (df["time_ms"] <= end_time)
@@ -143,10 +143,13 @@ def process_trip(tripid,vehicleid, starttime, endtime):
     df = df.sort_values("timesent").reset_index(drop=True)
 
     # for enrich_events()
-    df["time_ms"] = df["timesent"].astype("int64") // 10**6
+    #df["time_ms"] = df["timesent"].astype("int64") // 10**6
+    base_time = df["timesent"].iloc[0]
+    df["time_ms"] = ((df["timesent"] - base_time).dt.total_seconds() * 1000).astype(int)
 
     # running Aliv
-    result = aliv_roadDefects(all_data)
+    #result = aliv_roadDefects(all_data)
+    result = aliv_roadDefects(df.to_dict(orient="records"))
     if not result.get("speedbreakers"):
         print("No events detected")
         return
