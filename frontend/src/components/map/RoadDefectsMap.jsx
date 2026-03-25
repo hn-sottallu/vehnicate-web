@@ -16,7 +16,8 @@ const CITIES = ["Chennai", "Surat", "Bangalore", "Mumbai", "Hyderabad"];
 const CITIES_LOOP = [...CITIES, CITIES[0]];
 
 // ─── Color ramp ───────────────────────────────────────────────────────────────
-function getColor(param) {
+// ─── Color ramp (for events only) ────────────────────────────────────────────
+function getEventColor(param) {
   param = Math.max(0, Math.min(1, param));
   if (param < 0.3) {
     const x = Math.pow(param / 0.3, 2);
@@ -70,23 +71,24 @@ async function fetchImagesForEvents(eventIds) {
   return map;
 }
 
-// ─── Popup HTML ───────────────────────────────────────────────────────────────
-function buildPopupHTML(events, imageMap) {
-  let html = `<div style="font-family:monospace;max-width:480px;">`;
+// ─── Popup HTML (click → images) ─────────────────────────────────────────────
+function buildImagePopupHTML(events, imageMap) {
+  let html = `<div style="font-family:monospace;max-width:500px;">`;
   for (const ev of events) {
-    const imgs  = imageMap[ev.id] || [];
+    const imgs = imageMap[ev.id] || [];
     const start = new Date(ev.start_timestamp).toLocaleString("en-IN", {
       timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short",
     });
     const end = new Date(ev.end_timestamp).toLocaleTimeString("en-IN", {
       timeZone: "Asia/Kolkata", timeStyle: "short",
     });
+    const color = getEventColor(ev.parameter);
     html += `
-      <div style="border-left:3px solid ${getColor(ev.parameter)};padding:8px 12px;
+      <div style="border-left:3px solid ${color};padding:8px 12px;
         margin-bottom:10px;background:rgba(255,255,255,0.04);border-radius:0 6px 6px 0;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
           <span style="font-size:11px;color:#aaa;">Trip ${ev.tripid}</span>
-          <span style="font-size:12px;font-weight:700;color:${getColor(ev.parameter)};
+          <span style="font-size:12px;font-weight:700;color:${color};
             background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:99px;">
             ⬡ ${ev.parameter.toFixed(3)}
           </span>
@@ -106,7 +108,33 @@ function buildPopupHTML(events, imageMap) {
   }
   return html + `</div>`;
 }
-
+// ─── Hover tooltip HTML ───────────────────────────────────────────────────────
+function buildHoverHTML(events) {
+  const avgParam = events.reduce((s, e) => s + e.parameter, 0) / events.length;
+  const color = getEventColor(avgParam);
+  const start = new Date(events[0].start_timestamp).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short",
+  });
+  const end = new Date(events[events.length - 1].end_timestamp).toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata", timeStyle: "short",
+  });
+  return `
+    <div style="font-family:monospace;font-size:12px;min-width:180px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="color:#aaa;">Parameter</span>
+        <span style="font-weight:700;color:${color};">${avgParam.toFixed(3)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${events.length > 1 ? '6px' : '0'};">
+        <span style="color:#aaa;">Time</span>
+        <span style="color:#ccc;">${start} → ${end}</span>
+      </div>
+      ${events.length > 1 ? `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="color:#aaa;">Combined events</span>
+        <span style="color:#a855f7;font-weight:700;">${events.length}</span>
+      </div>` : ''}
+    </div>`;
+}
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Ledger&display=swap');
@@ -402,6 +430,17 @@ const styles = `
     top: 6px !important;
     right: 8px !important;
   }
+  .rdm-tooltip .leaflet-tooltip {
+    background: #12121a !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 8px !important;
+    color: #e0e0e0 !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+    padding: 8px 12px !important;
+  }
+  .rdm-tooltip .leaflet-tooltip-top:before {
+    border-top-color: rgba(255,255,255,0.1) !important;
+  }
 `;
 
 // ─── Search bar ───────────────────────────────────────────────────────────────
@@ -578,34 +617,103 @@ export default function RoadDefectsMap() {
   function drawHex(hexId, events) {
     const map = mapRef.current;
     if (!map) return;
-    if (layerCacheRef.current[hexId]) map.removeLayer(layerCacheRef.current[hexId]);
 
-    const avgParam = events.reduce((s, e) => s + e.parameter, 0) / events.length;
-    const color    = getColor(avgParam);
-    const latLngs  = h3.cellToBoundary(hexId).map(([lat, lng]) => [lat, lng]);
+    // Remove existing layer group for this hex if any
+    if (layerCacheRef.current[hexId]) {
+      layerCacheRef.current[hexId].forEach(l => map.removeLayer(l));
+    }
 
-    const polygon = L.polygon(latLngs, {
-      color, fillColor: color,
-      fillOpacity: 0.15 + avgParam * 0.35,
-      weight: 1.5, opacity: 0.7,
+    const layers = [];
+
+    // ── 1. Hexagon — always transparent blue ──────────────────────────────────
+    const latLngs = h3.cellToBoundary(hexId).map(([lat, lng]) => [lat, lng]);
+    const hexPolygon = L.polygon(latLngs, {
+      color: "#3b82f6",
+      fillColor: "#3b82f6",
+      fillOpacity: 0.15,
+      weight: 1.5,
+      opacity: 0.6,
     });
+    hexPolygon.addTo(map);
+    layers.push(hexPolygon);
 
-    polygon.on("click", async () => {
-      const missing = events.map((e) => e.id).filter((id) => !imageCacheRef.current[id]);
-      if (missing.length) Object.assign(imageCacheRef.current, await fetchImagesForEvents(missing));
-      polygon
-        .bindPopup(buildPopupHTML(events, imageCacheRef.current), { maxWidth: 520, maxHeight: 420 })
-        .openPopup();
-    });
-    polygon.on("mouseover", () =>
-      polygon.setStyle({ fillOpacity: Math.min(0.75, 0.15 + avgParam * 0.35 + 0.2), weight: 2.5 })
-    );
-    polygon.on("mouseout", () =>
-      polygon.setStyle({ fillOpacity: 0.15 + avgParam * 0.35, weight: 1.5 })
-    );
+    // ── 2. Group events by identical path ────────────────────────────────────
+    const pathGroups = {};
+    for (const ev of events) {
+      const key = JSON.stringify(ev.path);
+      if (!pathGroups[key]) pathGroups[key] = [];
+      pathGroups[key].push(ev);
+    }
 
-    polygon.addTo(map);
-    layerCacheRef.current[hexId] = polygon;
+    // ── 3. Draw each path group ───────────────────────────────────────────────
+    for (const [pathKey, groupEvents] of Object.entries(pathGroups)) {
+      const path = JSON.parse(pathKey);
+      const avgParam = groupEvents.reduce((s, e) => s + e.parameter, 0) / groupEvents.length;
+      const color = getEventColor(avgParam);
+
+      let eventLayer;
+
+      if (path.length <= 1) {
+        // ── Single point → Circle marker ──────────────────────────────────────
+        const [lat, lon] = path[0];
+        eventLayer = L.circleMarker([lat, lon], {
+          radius: 7,
+          color: color,
+          fillColor: color,
+          fillOpacity: 0.85,
+          weight: 2,
+        });
+      } else {
+        // ── Multiple points → Polyline ─────────────────────────────────────────
+        eventLayer = L.polyline(path, {
+          color: color,
+          weight: 5,
+          opacity: 0.85,
+        });
+      }
+
+      // Hover
+      eventLayer.on("mouseover", (e) => {
+        eventLayer.bindTooltip(buildHoverHTML(groupEvents), {
+          sticky: true,
+          opacity: 1,
+          className: "rdm-tooltip",
+        }).openTooltip(e.latlng);
+        if (path.length <= 1) {
+          eventLayer.setStyle({ radius: 10 });
+        } else {
+          eventLayer.setStyle({ weight: 7, opacity: 1 });
+        }
+      });
+      eventLayer.on("mouseout", () => {
+        eventLayer.closeTooltip();
+        if (path.length <= 1) {
+          eventLayer.setStyle({ radius: 7 });
+        } else {
+          eventLayer.setStyle({ weight: 5, opacity: 0.85 });
+        }
+      });
+
+      // Click → image popup
+      eventLayer.on("click", async () => {
+        const missing = groupEvents.map(e => e.id).filter(id => !imageCacheRef.current[id]);
+        if (missing.length) {
+          Object.assign(imageCacheRef.current, await fetchImagesForEvents(missing));
+        }
+        eventLayer
+          .bindPopup(buildImagePopupHTML(groupEvents, imageCacheRef.current), {
+            maxWidth: 520,
+            maxHeight: 460,
+          })
+          .openPopup();
+      });
+
+      eventLayer.addTo(map);
+      layers.push(eventLayer);
+    }
+
+    // Store all layers for this hex so we can remove them later
+    layerCacheRef.current[hexId] = layers;
   }
 
   const handleSearchSelect = useCallback((lat, lon) => {
@@ -621,7 +729,9 @@ export default function RoadDefectsMap() {
     setRefreshing(true);
 
     // Remove all hex layers from map
-    Object.values(layerCacheRef.current).forEach((layer) => map.removeLayer(layer));
+    Object.values(layerCacheRef.current).forEach((layers) => 
+    layers.forEach(l => map.removeLayer(l))
+  );
 
     // Clear all caches
     layerCacheRef.current = {};
