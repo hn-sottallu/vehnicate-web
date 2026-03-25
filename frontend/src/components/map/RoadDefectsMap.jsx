@@ -32,15 +32,15 @@ function getColor(param) {
 
 // ─── H3 helpers ───────────────────────────────────────────────────────────────
 function boundsToH3Cells(bounds) {
-  return h3.polygonToCells({
-    outer: [
-      [bounds.getNorth(), bounds.getWest()],
-      [bounds.getNorth(), bounds.getEast()],
-      [bounds.getSouth(), bounds.getEast()],
-      [bounds.getSouth(), bounds.getWest()],
-      [bounds.getNorth(), bounds.getWest()],
-    ],
-  }, H3_RES);
+  const polygon = [
+    [bounds.getNorth(), bounds.getWest()],
+    [bounds.getNorth(), bounds.getEast()],
+    [bounds.getSouth(), bounds.getEast()],
+    [bounds.getSouth(), bounds.getWest()],
+    [bounds.getNorth(), bounds.getWest()],
+  ];
+
+  return h3.polygonToCells(polygon, H3_RES);
 }
 
 // ─── Supabase fetchers ────────────────────────────────────────────────────────
