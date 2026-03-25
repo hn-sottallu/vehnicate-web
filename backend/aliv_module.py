@@ -245,7 +245,7 @@ class AlivRoadDefects:
 
                     p = ((dpOG + dp) / 2) * gymax * stdp
 
-                    if p != 0 and round(df.iloc[si]['latitude'],4)!=initialLat and round(df.iloc[si]['longitude'],4)!=initialLon:
+                    if p != 0 and df.iloc[si]['latitude']!=0 and df.iloc[si]['longitude']!=0 and round(df.iloc[si]['latitude'],4)!=initialLat and round(df.iloc[si]['longitude'],4)!=initialLon:
                         print("the vehicle has moved! (lat & long): ", round(df.iloc[si]['latitude'],4), round(df.iloc[si]['longitude'],4))
                         print(initialLat, initialLon)
                         events.append({'start_time': ts, 'end_time': te, 'parameter': p})

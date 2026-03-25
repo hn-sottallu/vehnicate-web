@@ -545,7 +545,11 @@ export default function RoadDefectsMap() {
 
     try {
       const cells     = boundsToH3Cells(map.getBounds());
+      console.log("1. Cells generated:", cells.length, cells.slice(0, 3));
+
       const newEvents = await fetchEventsForCells(cells, fetchedCells.current);
+      console.log("2. New events returned:", newEvents.length, newEvents);
+
       cells.forEach((c) => fetchedCells.current.add(c));
       if (!newEvents.length) return;
 
