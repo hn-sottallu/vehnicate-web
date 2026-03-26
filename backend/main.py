@@ -150,7 +150,7 @@ def process_trip(tripid,vehicleid, starttime, endtime):
     #df["time_ms"] = df["timesent"].astype("int64") // 10**6
     base_time = df["timesent"].iloc[0]
     df["time_ms"] = ((df["timesent"] - base_time).dt.total_seconds() * 1000).astype(int)
-    accel_x = df["accel_x"].iloc[0]
+    accel_x = df["accelx"].iloc[0]
     rotation_angle = 90 if accel_x > 0 else -90
     # running Aliv
     #result = aliv_roadDefects(all_data)
