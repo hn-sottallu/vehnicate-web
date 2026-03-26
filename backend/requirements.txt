@@ -7,3 +7,5 @@ supabase
 h3
 pydantic
 python-dotenv
+Pillow
+requests

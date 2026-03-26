@@ -7,6 +7,9 @@ from datetime import timedelta
 import h3 as h3lib
 import os
 from dotenv import load_dotenv
+import requests
+from PIL import Image, ImageDraw, ImageFont
+import io
 
 """
 each time a new row comes into the "trips" table, a https request is triggered via ngrok
@@ -43,7 +46,7 @@ class WebhookPayload(BaseModel):
 
 # for  deriving the absolute timestamps and lat&lon from the output that aliv gives i.e.,
 # relative timestamps (in ms) corresponding to the events.
-def enrich_events(tripid, vehicleid, result, df):
+def enrich_events(tripid, vehicleid, result, df, rotation_angle):
     enriched = []
 
     for event in result["speedbreakers"]:
@@ -85,7 +88,8 @@ def enrich_events(tripid, vehicleid, result, df):
             "parameter": event["parameter"],
             "path": lat_lon,
             "start_time_ms": start_time_ms,
-            "end_time_ms": end_time_ms
+            "end_time_ms": end_time_ms,
+            "rotation_angle": rotation_angle
         })
 
     return enriched
@@ -146,7 +150,8 @@ def process_trip(tripid,vehicleid, starttime, endtime):
     #df["time_ms"] = df["timesent"].astype("int64") // 10**6
     base_time = df["timesent"].iloc[0]
     df["time_ms"] = ((df["timesent"] - base_time).dt.total_seconds() * 1000).astype(int)
-
+    accel_x = df["accel_x"].iloc[0]
+    rotation_angle = 90 if accel_x > 0 else -90
     # running Aliv
     #result = aliv_roadDefects(all_data)
     result = aliv_roadDefects(df.to_dict(orient="records"))
@@ -154,7 +159,7 @@ def process_trip(tripid,vehicleid, starttime, endtime):
         print("No events detected")
         return
     
-    enriched_events = enrich_events(tripid, vehicleid, result, df)
+    enriched_events = enrich_events(tripid, vehicleid, result, df, rotation_angle)
     print("number of enriched events", enriched_events)
     if enriched_events:
         #supabase_target.table("roaddefects").insert(enriched_events).execute()
@@ -173,11 +178,12 @@ def process_trip(tripid,vehicleid, starttime, endtime):
             h3_index = event["h3_index"]
             start_time = event["start_timestamp"]
             end_time = event["end_timestamp"]
+            rotation_angle = event.get("rotation_angle", -90)  # fallback to -90
 
-            #backtracking 2.5seconds
             adjusted_start_time = (
                 pd.to_datetime(start_time, utc=True) - timedelta(seconds=2.5)
             ).isoformat()
+
             image_response = (
                 supabase_source
                 .table("image_data")
@@ -189,15 +195,64 @@ def process_trip(tripid,vehicleid, starttime, endtime):
             )
 
             images = image_response.data
-            print(images[:2])
-            for img in images:
+            for img_row in images:
+                # Download image
+                try:
+                    resp = requests.get(img_row["file_url"], timeout=20)
+                    resp.raise_for_status()
+                    img_bytes = resp.content
+                except Exception as e:
+                    print(f"Failed to download image: {e}")
+                    continue
+
+                # Rotate + watermark
+                img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+                img = img.rotate(rotation_angle, expand=True)
+
+                original_dt = pd.to_datetime(img_row["timestamp"])
+                dt_str = original_dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+                watermark_text = f"{dt_str}\ncaptured by vehnicate"
+
+                draw = ImageDraw.Draw(img)
+                font_size = int(img.height * 0.035)
+                while True:
+                    try:
+                        font = ImageFont.truetype("arial.ttf", font_size)
+                    except:
+                        font = ImageFont.load_default()
+                        break
+                    bbox = draw.multiline_textbbox((0, 0), watermark_text, font=font)
+                    if (bbox[2] - bbox[0]) <= img.width * 0.30:
+                        break
+                    font_size -= 2
+                    if font_size <= 12:
+                        break
+
+                padding = 20
+                for ox, oy in [(2,2),(-2,-2),(2,-2),(-2,2),(0,2),(2,0),(-2,0),(0,-2)]:
+                    draw.multiline_text((padding+ox, padding+oy), watermark_text, fill="black", font=font)
+                draw.multiline_text((padding, padding), watermark_text, fill="white", font=font)
+
+                # Upload to Supabase storage instead of saving locally
+                buffer = io.BytesIO()
+                img.save(buffer, format="JPEG")
+                buffer.seek(0)
+
+                file_name = f"{vehicleid}/{tripid}/{event_id}/{img_row['timestamp']}.jpg"
+                supabase_target.storage.from_("processed-images").upload(
+                    file_name,
+                    buffer.read(),
+                    {"content-type": "image/jpeg"}
+                )
+                public_url = supabase_target.storage.from_("processed-images").get_public_url(file_name)
+
                 images_to_insert.append({
                     "vehicle_id": vehicleid,
                     "trip_id": tripid,
                     "h3_index": h3_index,
-                    "image_url": img["file_url"],
+                    "image_url": public_url,   # ← processed image URL, not original
                     "event_id": event_id,
-                    "timestamp": img["timestamp"]
+                    "timestamp": img_row["timestamp"]
                 })
 
         # Step 3: Insert images
