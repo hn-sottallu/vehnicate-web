@@ -76,9 +76,8 @@ function buildImagePopupHTML(events, imageMap) {
   let html = `<div style="font-family:monospace;max-width:500px;">`;
   for (const ev of events) {
     const imgs = imageMap[ev.id] || [];
-    const start = new Date(ev.start_timestamp).toLocaleString("en-IN", {
-      dateStyle: "medium", timeStyle: "short",
-    });
+    
+    const start = ev.start_timestamp.slice(0, 19).replace("T", " ");
     const color = getEventColor(ev.parameter);
     html += `
       <div style="border-left:3px solid ${color};padding:8px 12px;
@@ -110,9 +109,8 @@ function buildImagePopupHTML(events, imageMap) {
 function buildHoverHTML(events) {
   const avgParam = events.reduce((s, e) => s + e.parameter, 0) / events.length;
   const color = getEventColor(avgParam);
-  const start = new Date(events[0].start_timestamp).toLocaleString("en-IN", {
-    dateStyle: "medium", timeStyle: "short",
-  });
+  
+  const start = events[0].start_timestamp.slice(0, 19).replace("T", " ");
   return `
     <div style="font-family:monospace;font-size:12px;min-width:180px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -643,9 +641,9 @@ export default function RoadDefectsMap() {
     // ── 1. Hexagon — always transparent blue ──────────────────────────────────
     const latLngs = h3.cellToBoundary(hexId).map(([lat, lng]) => [lat, lng]);
     const hexPolygon = L.polygon(latLngs, {
-      color: "#0e4cb0",
+      color: "#4a71b0",
       fillColor: "#3b82f6",
-      fillOpacity: 0.35,
+      fillOpacity: 0.15,
       weight: 1.5,
       opacity: 0.5,
     });
