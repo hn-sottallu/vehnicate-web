@@ -623,7 +623,11 @@ export default function RoadDefectsMap() {
       isFetchingRef.current = false;
     }
   }, []);
-
+  function metersToPixels(map, meters, lat) {
+    const zoom = map.getZoom();
+    const metersPerPixel = (156543.03392 * Math.cos(lat * Math.PI / 180)) / Math.pow(2, zoom);
+    return Math.max(1, meters / metersPerPixel);
+  }
   // ── Draw hex ───────────────────────────────────────────────────────────────
   function drawHex(hexId, events) {
     const map = mapRef.current;
@@ -639,11 +643,11 @@ export default function RoadDefectsMap() {
     // ── 1. Hexagon — always transparent blue ──────────────────────────────────
     const latLngs = h3.cellToBoundary(hexId).map(([lat, lng]) => [lat, lng]);
     const hexPolygon = L.polygon(latLngs, {
-      color: "#3b82f6",
+      color: "#0e4cb0",
       fillColor: "#3b82f6",
       fillOpacity: 0.35,
       weight: 1.5,
-      opacity: 0.8,
+      opacity: 0.5,
     });
     hexPolygon.addTo(map);
     layers.push(hexPolygon);
@@ -668,7 +672,7 @@ export default function RoadDefectsMap() {
         // ── Single point → Circle marker ──────────────────────────────────────
         const [lat, lon] = path[0];
         eventLayer = L.circle([lat, lon], {
-          radius: 8,
+          radius: 6,
           color: color,
           fillColor: color,
           fillOpacity: 0.9,
@@ -676,33 +680,45 @@ export default function RoadDefectsMap() {
         });
       } else {
         // ── Multiple points → Polyline ─────────────────────────────────────────
+        const centerLat = path[Math.floor(path.length / 2)][0];
+        const initialWeight = metersToPixels(map, 8, centerLat);
         eventLayer = L.polyline(path, {
           color: color,
-          weight: 5,
+          weight: initialWeight,
           opacity: 0.85,
         });
-      }
+      
+      const updateWeight = () => {
+        const w = metersToPixels(map, 8, centerLat);
+        eventLayer.setStyle({ weight: w });
+      };
+      map.on("zoom", updateWeight);
 
+      // Clean up listener when layer is removed
+      eventLayer.on("remove", () => {
+        map.off("zoom", updateWeight);
+      });
+      }
       // Hover
       eventLayer.on("mouseover", (e) => {
         eventLayer.bindTooltip(buildHoverHTML(groupEvents), {
-          sticky: true,
-          opacity: 1,
-          className: "rdm-tooltip",
+          sticky: true, opacity: 1, className: "rdm-tooltip",
         }).openTooltip(e.latlng);
         if (path.length <= 1) {
-          eventLayer.setStyle({ fillOpacity: 1, weight: 3 });  // ← highlight on hover
+          eventLayer.setStyle({ fillOpacity: 1, weight: 3 });
         } else {
-          eventLayer.setStyle({ weight: 7, opacity: 1 });
+          const centerLat = path[Math.floor(path.length / 2)][0];
+          eventLayer.setStyle({ weight: metersToPixels(map, 12, centerLat), opacity: 1 }); // slightly wider on hover
         }
       });
 
       eventLayer.on("mouseout", () => {
         eventLayer.closeTooltip();
         if (path.length <= 1) {
-          eventLayer.setStyle({ fillOpacity: 0.9, weight: 1.5 });  // ← back to normal
+          eventLayer.setStyle({ fillOpacity: 0.9, weight: 1.5 });
         } else {
-          eventLayer.setStyle({ weight: 5, opacity: 0.85 });
+          const centerLat = path[Math.floor(path.length / 2)][0];
+          eventLayer.setStyle({ weight: metersToPixels(map, 8, centerLat), opacity: 0.85 });
         }
       });
 
