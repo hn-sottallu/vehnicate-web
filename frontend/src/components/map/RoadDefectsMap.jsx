@@ -77,7 +77,7 @@ function buildImagePopupHTML(events, imageMap) {
   for (const ev of events) {
     const imgs = imageMap[ev.id] || [];
     const start = new Date(ev.start_timestamp).toLocaleString("en-IN", {
-      timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short",
+      dateStyle: "medium", timeStyle: "short",
     });
     const color = getEventColor(ev.parameter);
     html += `
@@ -111,10 +111,14 @@ function buildHoverHTML(events) {
   const avgParam = events.reduce((s, e) => s + e.parameter, 0) / events.length;
   const color = getEventColor(avgParam);
   const start = new Date(events[0].start_timestamp).toLocaleString("en-IN", {
-    timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short",
+    dateStyle: "medium", timeStyle: "short",
   });
   return `
     <div style="font-family:monospace;font-size:12px;min-width:180px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="color:#ccc;font-weight:600;">Event ID</span>
+        <span style="color:#fff;">${events[0].id}</span>
+      </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
         <span style="color:#ccc;font-weight:600;">Parameter</span>
         <span style="font-weight:700;color:${color};">${avgParam.toFixed(3)}</span>
@@ -170,7 +174,7 @@ const styles = `
     transform: translateX(-50%);
     padding: 10px 24px;
     border-radius: 22px;
-    background: rgba(0,0,0,0.4);
+    background: rgba(255, 254, 254, 0.4);
     backdrop-filter: blur(16px);
     z-index: 1000;
     pointer-events: none;
@@ -637,9 +641,9 @@ export default function RoadDefectsMap() {
     const hexPolygon = L.polygon(latLngs, {
       color: "#3b82f6",
       fillColor: "#3b82f6",
-      fillOpacity: 0.15,
+      fillOpacity: 0.35,
       weight: 1.5,
-      opacity: 0.6,
+      opacity: 0.8,
     });
     hexPolygon.addTo(map);
     layers.push(hexPolygon);
@@ -663,12 +667,12 @@ export default function RoadDefectsMap() {
       if (path.length <= 1) {
         // ── Single point → Circle marker ──────────────────────────────────────
         const [lat, lon] = path[0];
-        eventLayer = L.circleMarker([lat, lon], {
-          radius: 4,
+        eventLayer = L.circle([lat, lon], {
+          radius: 8,
           color: color,
           fillColor: color,
           fillOpacity: 0.9,
-          weight: 2,
+          weight: 1.5,
         });
       } else {
         // ── Multiple points → Polyline ─────────────────────────────────────────
@@ -685,18 +689,18 @@ export default function RoadDefectsMap() {
           sticky: true,
           opacity: 1,
           className: "rdm-tooltip",
-          
         }).openTooltip(e.latlng);
         if (path.length <= 1) {
-          eventLayer.setStyle({ radius: 6 });
+          eventLayer.setStyle({ fillOpacity: 1, weight: 3 });  // ← highlight on hover
         } else {
           eventLayer.setStyle({ weight: 7, opacity: 1 });
         }
       });
+
       eventLayer.on("mouseout", () => {
         eventLayer.closeTooltip();
         if (path.length <= 1) {
-          eventLayer.setStyle({ radius: 4 });
+          eventLayer.setStyle({ fillOpacity: 0.9, weight: 1.5 });  // ← back to normal
         } else {
           eventLayer.setStyle({ weight: 5, opacity: 0.85 });
         }
