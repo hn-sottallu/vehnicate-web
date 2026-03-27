@@ -172,7 +172,7 @@ const styles = `
     transform: translateX(-50%);
     padding: 10px 24px;
     border-radius: 22px;
-    background: rgba(255, 254, 254, 0.4);
+    background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(16px);
     z-index: 1000;
     pointer-events: none;
