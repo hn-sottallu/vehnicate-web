@@ -239,12 +239,12 @@ def process_trip(tripid,vehicleid, starttime, endtime):
                 buffer.seek(0)
 
                 file_name = f"{vehicleid}/{tripid}/{event_id}/{img_row['timestamp']}.jpg"
-                supabase_target.storage.from_("processed-images").upload(
+                supabase_target.storage.from_("images").upload(
                     file_name,
                     buffer.read(),
                     {"content-type": "image/jpeg"}
                 )
-                public_url = supabase_target.storage.from_("processed-images").get_public_url(file_name)
+                public_url = supabase_target.storage.from_("images").get_public_url(file_name)
 
                 images_to_insert.append({
                     "vehicle_id": vehicleid,
