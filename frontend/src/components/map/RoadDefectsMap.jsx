@@ -79,23 +79,21 @@ function buildImagePopupHTML(events, imageMap) {
     const start = new Date(ev.start_timestamp).toLocaleString("en-IN", {
       timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short",
     });
-    const end = new Date(ev.end_timestamp).toLocaleTimeString("en-IN", {
-      timeZone: "Asia/Kolkata", timeStyle: "short",
-    });
     const color = getEventColor(ev.parameter);
     html += `
       <div style="border-left:3px solid ${color};padding:8px 12px;
         margin-bottom:10px;background:rgba(255,255,255,0.04);border-radius:0 6px 6px 0;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-          <span style="font-size:11px;color:#aaa;">Trip ${ev.tripid}</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:11px;color:#ccc;">${start}</span>
           <span style="font-size:12px;font-weight:700;color:${color};
             background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:99px;">
             ⬡ ${ev.parameter.toFixed(3)}
           </span>
-        </div>
-        <div style="font-size:11px;color:#ccc;margin-bottom:8px;">${start} → ${end}</div>`;
+        </div>`;
     if (imgs.length > 0) {
-      html += `<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;">`;
+      html += `
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;
+          scrollbar-width:thin;scrollbar-color:#fff transparent;">`;
       for (const url of imgs.slice(0, 8)) {
         html += `<img src="${url}" style="height:120px;border-radius:6px;flex-shrink:0;
           object-fit:cover;cursor:pointer;" onclick="window.open('${url}','_blank')"/>`;
@@ -115,22 +113,19 @@ function buildHoverHTML(events) {
   const start = new Date(events[0].start_timestamp).toLocaleString("en-IN", {
     timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short",
   });
-  const end = new Date(events[events.length - 1].end_timestamp).toLocaleTimeString("en-IN", {
-    timeZone: "Asia/Kolkata", timeStyle: "short",
-  });
   return `
     <div style="font-family:monospace;font-size:12px;min-width:180px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <span style="color:#aaa;">Parameter</span>
+        <span style="color:#ccc;font-weight:600;">Parameter</span>
         <span style="font-weight:700;color:${color};">${avgParam.toFixed(3)}</span>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${events.length > 1 ? '6px' : '0'};">
-        <span style="color:#aaa;">Time</span>
-        <span style="color:#ccc;">${start} → ${end}</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:${events.length > 1 ? '6px' : '0'};">
+        <span style="color:#ccc;font-weight:600;">Time</span>
+        <span style="color:#fff;">${start}</span>
       </div>
       ${events.length > 1 ? `
       <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="color:#aaa;">Combined events</span>
+        <span style="color:#ccc;font-weight:600;">Combined events</span>
         <span style="color:#a855f7;font-weight:700;">${events.length}</span>
       </div>` : ''}
     </div>`;
@@ -328,7 +323,8 @@ const styles = `
     66.2%      { transform: translateY(-80px); }
     79.4%      { transform: translateY(-80px); }
     82.7%      { transform: translateY(-100px); }
-    96.2%      { transform: translateY(-100px); }
+    96.1%      { transform: translateY(-100px); }
+    96.2%      { transform: translateY(0px); }
     100%       { transform: translateY(0px); }
   }
 
@@ -430,16 +426,27 @@ const styles = `
     top: 6px !important;
     right: 8px !important;
   }
-  .rdm-tooltip .leaflet-tooltip {
-    background: #12121a !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
+  .leaflet-tooltip {
+    background: rgba(10,10,18,0.97) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
     border-radius: 8px !important;
-    color: #e0e0e0 !important;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6) !important;
     padding: 8px 12px !important;
   }
-  .rdm-tooltip .leaflet-tooltip-top:before {
-    border-top-color: rgba(255,255,255,0.1) !important;
+  .leaflet-tooltip-top:before {
+    border-top-color: rgba(255,255,255,0.15) !important;
+  }
+  
+  .leaflet-popup-content div::-webkit-scrollbar {
+    height: 4px;
+  }
+  .leaflet-popup-content div::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .leaflet-popup-content div::-webkit-scrollbar-thumb {
+    background: #fff;
+    border-radius: 99px;
   }
 `;
 
@@ -657,10 +664,10 @@ export default function RoadDefectsMap() {
         // ── Single point → Circle marker ──────────────────────────────────────
         const [lat, lon] = path[0];
         eventLayer = L.circleMarker([lat, lon], {
-          radius: 7,
+          radius: 4,
           color: color,
           fillColor: color,
-          fillOpacity: 0.85,
+          fillOpacity: 0.9,
           weight: 2,
         });
       } else {
@@ -678,9 +685,10 @@ export default function RoadDefectsMap() {
           sticky: true,
           opacity: 1,
           className: "rdm-tooltip",
+          
         }).openTooltip(e.latlng);
         if (path.length <= 1) {
-          eventLayer.setStyle({ radius: 10 });
+          eventLayer.setStyle({ radius: 6 });
         } else {
           eventLayer.setStyle({ weight: 7, opacity: 1 });
         }
@@ -688,7 +696,7 @@ export default function RoadDefectsMap() {
       eventLayer.on("mouseout", () => {
         eventLayer.closeTooltip();
         if (path.length <= 1) {
-          eventLayer.setStyle({ radius: 7 });
+          eventLayer.setStyle({ radius: 4 });
         } else {
           eventLayer.setStyle({ weight: 5, opacity: 0.85 });
         }
@@ -775,11 +783,11 @@ export default function RoadDefectsMap() {
       <div id="rdm-container">
         <div id="rdm-map" ref={mapDivRef} />
         <SearchBar onSelect={handleSearchSelect} />
-        <div id="rdm-badge"><span>road explorer</span></div>
+        <div id="rdm-badge"><span>road runner</span></div>
         <button id="rdm-refresh" onClick={handleRefresh} disabled={refreshing}>
           {refreshing
             ? <><span className="spin">↻</span> Refreshing…</>
-            : <>↻ Refresh</>}
+            : <>↻</>}
         </button>
         <div id="rdm-watermark">vehnicate</div>
       </div>

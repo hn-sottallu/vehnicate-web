@@ -54,8 +54,8 @@ class AlivRoadDefects:
         df['time_ms'] = (ts - ts.iloc[0]).dt.total_seconds() * 1000
         df['time_ms'] = df['time_ms'].astype(int)
 
-        print("time_ms first 5 after fix:", df['time_ms'].head().tolist())
-        print("time_ms last 5 after fix:", df['time_ms'].tail().tolist())
+        #print("time_ms first 5 after fix:", df['time_ms'].head().tolist())
+        #print("time_ms last 5 after fix:", df['time_ms'].tail().tolist())
         return df
 
     # ==========================================================
@@ -167,10 +167,10 @@ class AlivRoadDefects:
             return {'speedbreakers': []}
 
         df = self._rows_to_df(rows)
-        print("time_ms first 5:", df['time_ms'].head().tolist())
-        print("time_ms last 5:", df['time_ms'].tail().tolist())
-        print("time_ms dtype:", df['time_ms'].dtype)
-        print("NaT in timesent:", df['timesent'].isna().sum())
+        #print("time_ms first 5:", df['time_ms'].head().tolist())
+        #print("time_ms last 5:", df['time_ms'].tail().tolist())
+        #print("time_ms dtype:", df['time_ms'].dtype)
+        #print("NaT in timesent:", df['timesent'].isna().sum())
         df = self.phone_to_vehicle(df)
 
         initialLat = round(df[(df.latitude != 0) & (df.longitude != 0)].iloc[0]['latitude'],4)
@@ -202,8 +202,8 @@ class AlivRoadDefects:
         df = df_resampled
 
         filt_pitch = self.butter_bandpass(df['Pitch'].values, 0.56, 1)
-        print("filt_pitch length:", len(filt_pitch))  # ← add here
-        print("df length after resample:", len(df))
+        #print("filt_pitch length:", len(filt_pitch))  # ← add here
+        #print("df length after resample:", len(df))
         if len(filt_pitch) < 100:
             return {'speedbreakers': []}
 
@@ -215,10 +215,10 @@ class AlivRoadDefects:
 
         chunks = self.Chunking(df_f, 'Pitch', 'gyro_y')
         s = np.std(filt_pitch)
-        print("filt_pitch length after trim:", len(filt_pitch))
-        print("std of filt_pitch:", s)
-        print("chunks count:", len(chunks))
-        print("initialLat:", initialLat, "initialLon:", initialLon)
+        #print("filt_pitch length after trim:", len(filt_pitch))
+        #print("std of filt_pitch:", s)
+        #print("chunks count:", len(chunks))
+        #print("initialLat:", initialLat, "initialLon:", initialLon)
         events, buf, active = [], [], False
 
         raw_time = df['time_ms'].values
@@ -246,8 +246,8 @@ class AlivRoadDefects:
                     p = ((dpOG + dp) / 2) * gymax * stdp
 
                     if p != 0 and df.iloc[si]['latitude']!=0 and df.iloc[si]['longitude']!=0 and round(df.iloc[si]['latitude'],4)!=initialLat and round(df.iloc[si]['longitude'],4)!=initialLon:
-                        print("the vehicle has moved! (lat & long): ", round(df.iloc[si]['latitude'],4), round(df.iloc[si]['longitude'],4))
-                        print(initialLat, initialLon)
+                        #print("the vehicle has moved! (lat & long): ", round(df.iloc[si]['latitude'],4), round(df.iloc[si]['longitude'],4))
+                        #print(initialLat, initialLon)
                         events.append({'start_time': ts, 'end_time': te, 'parameter': p})
 
                 buf, active = [], False
