@@ -98,7 +98,7 @@ def aliv_roadDefects(rows):
     aliv = AlivRoadDefects(verbose=False, fs=80)
 
     result = aliv.analyze_batch(rows)
-    print("ALIv result:", result)
+    #print("ALIv result:", result)
     print("Speedbreakers found:", len(result.get("speedbreakers", [])))
     return result
 
@@ -263,16 +263,21 @@ def process_trip(tripid,vehicleid, starttime, endtime):
     print("Processing finished")
 
 
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
+    return response
+
 @app.post("/Aliv_for_MVP1")
 def Aliv_for_MVP1(payload: WebhookPayload,  background_tasks: BackgroundTasks):
 
     trip = payload.record
 
-    #print("Trip received:")
-    #print("Trip ID:", trip.tripid)
-    #print("Vehicle:", trip.vehicleid)
-    #print("Start:", trip.starttime)
-    #print("End:", trip.endtime)
     background_tasks.add_task(
         process_trip,
         trip.tripid,
