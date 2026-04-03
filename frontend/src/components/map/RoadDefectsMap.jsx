@@ -48,12 +48,25 @@ function boundsToH3Cells(bounds) {
 async function fetchEventsForCells(cells, cachedCells) {
   const toFetch = cells.filter((c) => !cachedCells.has(c));
   if (!toFetch.length) return [];
-  const { data, error } = await supabase
-    .from("roaddefects")
-    .select("id, tripid, h3_index, path, parameter, start_timestamp, end_timestamp")
-    .in("h3_index", toFetch);
-  if (error) { console.error("[supabase] roaddefects:", error); return []; }
-  return data || [];
+
+  const CHUNK_SIZE = 100; // safe limit for URL length
+  const chunks = [];
+  for (let i = 0; i < toFetch.length; i += CHUNK_SIZE) {
+    chunks.push(toFetch.slice(i, i + CHUNK_SIZE));
+  }
+
+  const results = await Promise.all(
+    chunks.map(async (chunk) => {
+      const { data, error } = await supabase
+        .from("roaddefects")
+        .select("id, tripid, h3_index, path, parameter, start_timestamp, end_timestamp")
+        .in("h3_index", chunk);
+      if (error) { console.error("[supabase] roaddefects:", error); return []; }
+      return data || [];
+    })
+  );
+
+  return results.flat();
 }
 
 async function fetchImagesForEvents(eventIds) {
@@ -593,9 +606,13 @@ export default function RoadDefectsMap() {
 
     try {
       const cells     = boundsToH3Cells(map.getBounds());
-      console.log("1. Cells generated:", cells.length, cells.slice(0, 3));
+      const toFetch = cells.filter((c) => !fetchedCells.current.has(c));
 
-      const newEvents = await fetchEventsForCells(cells, fetchedCells.current);
+      //console.log("1. Cells generated:", cells.length, cells.slice(0, 3));
+
+      const newEvents = await fetchEventsForCells(toFetch, new Set());
+      toFetch.forEach((c) => fetchedCells.current.add(c));
+
       console.log("2. New events returned:", newEvents.length, newEvents);
 
       cells.forEach((c) => fetchedCells.current.add(c));
