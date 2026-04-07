@@ -1,4 +1,5 @@
 import RoadDefectsMap from "../components/map/RoadDefectsMap"
+import { Link } from "react-router-dom";
 
 const FOOTER_HEIGHT = 64
 
@@ -24,9 +25,11 @@ const MapPage = () => {
       >
         <p className="text-gray-400 text-sm md:text-base">
           Don't find your place?{" "}
-          <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent font-medium">
-            Download the hn-opsin app
-          </span>{" "}
+          <Link to="/guide">
+            <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent font-medium cursor-pointer hover:opacity-80 transition-opacity">
+              Download the hn-Opsin app
+            </span>
+          </Link>{" "}
           and drive through your area to put it on the map.
         </p>
       </footer>
