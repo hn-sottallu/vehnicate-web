@@ -141,7 +141,7 @@ const styles = `
       -8px 0 0 #ccc,
       0 24px 80px rgba(0,0,0,0.7),
       0 8px 24px rgba(0,0,0,0.4);
-    min-height: 520px;
+    height: 580px;
     overflow: hidden;
     animation: bookOpen 0.5s ease forwards;
   }
@@ -420,20 +420,22 @@ const styles = `
     display: flex;
     align-items: center;
     gap: 8px;
-    background: none;
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 40px;
-    padding: 10px 20px;
-    color: rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+    color: white;
     font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.5px;
+    font-size: 18px;
     cursor: pointer;
     transition: all 0.2s;
   }
   .book-nav-btn:hover {
-    border-color: rgba(168,85,247,0.5);
-    color: white;
+    background: rgba(255,255,255,0.15);
+    border-color: white;
   }
   .book-nav-btn:disabled { opacity: 0.2; cursor: not-allowed; }
   .book-page-indicator {
@@ -515,7 +517,7 @@ const PAGES = [
         <>
           <p className="page-body">When you first launch Opsin, tap <strong>Create account</strong> and fill in your details.</p>
           <div className="screenshot">
-            <img src="/signup_screen.jpeg" alt="Signup screen" style={{ width: "100%", height: 200, borderRadius: 8, objectFit: "cover" }} />
+            <img src="/signup_screen.jpeg" alt="Signup screen" style={{ width: "100%", height: 200, borderRadius: 8, objectFit: "contain", background: "#fff" }} />
           </div>
           
         </>
@@ -528,8 +530,8 @@ const PAGES = [
         <>
           <p className="page-body">After signup, register the vehicle you'll be scanning with.</p>
           <div style={{ display: "flex", gap: 8, margin: "12px 0" }}>
-            <img src="/garage.jpeg" alt="Garage" style={{ width: "50%", height: 200, borderRadius: 8, objectFit: "cover" }} />
-            <img src="/add_vehicle.jpeg" alt="Add vehicle" style={{ width: "50%", height: 200, borderRadius: 8, objectFit: "cover" }} />
+            <img src="/garage.jpeg" alt="Garage" style={{ width: "50%", height: 200, borderRadius: 8, objectFit: "contain", background: "#fff" }} />
+            <img src="/add_vehicle.jpeg" alt="Add vehicle" style={{ width: "50%", height: 200, borderRadius: 8, objectFit: "contain", background: "#fff" }} />
           </div>
           <p className="page-body" style={{ fontSize: 13 }}>
             You can register multiple vehicles and switch between them before starting any trip.
@@ -544,13 +546,13 @@ const PAGES = [
       title: "Starting a drive",
       content: (
         <>
-          <p className="page-body">From the home screen, select your vehicle and tap <strong>Start trip</strong>.</p>
+          <p className="page-body">From the home screen, select your vehicle and tap <strong>Start drive</strong>.</p>
           <div className="page-divider" />
           <div className="screenshot">
-            <img src="/App_home.jpeg" alt="App home" style={{ width: "100%", height: 200, borderRadius: 8, objectFit: "cover" }} />
+            <img src="/App_home.jpeg" alt="App home" style={{ width: "100%", height: 200, borderRadius: 8, objectFit: "contain", background: "#fff" }} />
           </div>
           {[
-            ["1", "Mount your phone", "Use a windshield or dashboard mount incase of car and a traditional handlbar phone stand incase of bike. The phone must be fixed to the vehicle — not held."],
+            ["1", "Mount your phone", "Use a windshield or dashboard mount incase of car and a traditional handlbar phone stand incase of bike. The phone must be fixed to the vehicle as shown, not hand-held."],
             ["2", "Orient it correctly", "Place the phone horizontally with the screen facing you and the camera should be at the bottom-right corner."],
             ["3", "Drive normally", "The app detects bumps and potholes automatically."],
           ].map(([n, t, d]) => (
@@ -572,8 +574,8 @@ const PAGES = [
         <>
           <p className="page-body">Opsin senses autonomously - you need not touch it.</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "12px 0" }}>
-            <img src="/dataCollection_screen.jpeg" alt="Data collection screen" style={{ width: "100%", height: 150, borderRadius: 8, objectFit: "cover" }} />
-            <img src="/appOnMount.png" alt="App on mount" style={{ width: "100%", height: 150, borderRadius: 8, objectFit: "cover" }} />
+            <img src="/dataCollection_screen.jpeg" alt="Data collection screen" style={{ width: "100%", height: 150, borderRadius: 8, objectFit: "contain", background: "#fff" }} />
+            <img src="/appOnMount.png" alt="App on mount" style={{ width: "100%", height: 150, borderRadius: 8, objectFit: "contain", background: "#fff" }} />
           </div>
           <p className="page-body" style={{ fontSize: 13 }}>
             Tap <strong>End trip</strong> when done. Events upload automatically when connectivity is available.
@@ -588,7 +590,7 @@ const PAGES = [
       title: "Seeing your results",
       content: (
         <>
-          <p className="page-body">Head to <strong>Road-Scout</strong> — our web dashboard — to see everything your drive captured, visualised on the map.</p>
+          <p className="page-body">Head to <strong>Road-Scout</strong> and you can see everything you helped capture on the map</p>
           <div className="page-divider" />
           <p className="page-body" style={{ fontSize: 13 }}>Each segment is colour-coded by severity:</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "12px 0" }}>
@@ -631,7 +633,7 @@ const PAGES = [
           <p className="page-body" style={{ fontSize: 12, color: "#999", fontStyle: "italic" }}>
             That's everything. Happy driving and thank you for mapping the roads.
           </p>
-          <p style={{ fontFamily: "DM Mono", fontSize: 9, letterSpacing: 2, color: "#bbb", marginTop: 12, textTransform: "uppercase" }}>
+          <p style={{ fontFamily: "DM Mono", fontSize: 9, letterSpacing: 2, color: "#bbb", marginTop: 12, textTransform: "none" }}>
             vehnicate · road-scout platform
           </p>
         </>
