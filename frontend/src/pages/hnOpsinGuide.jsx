@@ -578,7 +578,7 @@ const PAGES = [
             <img src="/appOnMount.png" alt="App on mount" style={{ width: "100%", height: 150, borderRadius: 8, objectFit: "contain", background: "#fff" }} />
           </div>
           <p className="page-body" style={{ fontSize: 13 }}>
-            Tap <strong>End trip</strong> when done. Events upload automatically when connectivity is available.
+            Tap <strong>stop collection</strong> when done. Events upload automatically when connectivity is available.
           </p>
         </>
       ),
