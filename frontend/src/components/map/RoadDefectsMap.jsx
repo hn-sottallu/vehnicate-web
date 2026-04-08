@@ -687,7 +687,7 @@ export default function RoadDefectsMap() {
         // ── Single point → Circle marker ──────────────────────────────────────
         const [lat, lon] = path[0];
         eventLayer = L.circle([lat, lon], {
-          radius: 6,
+          radius: 4, //previously 6 and it covered mostly the entire road.. ig 4 means lane level
           color: color,
           fillColor: color,
           fillOpacity: 0.9,
@@ -818,7 +818,7 @@ export default function RoadDefectsMap() {
       <div id="rdm-container">
         <div id="rdm-map" ref={mapDivRef} />
         <SearchBar onSelect={handleSearchSelect} />
-        <div id="rdm-badge"><span>road runner</span></div>
+        <div id="rdm-badge"><span>road-scout</span></div>
         <button id="rdm-refresh" onClick={handleRefresh} disabled={refreshing}>
           {refreshing
             ? <><span className="spin">↻</span> Refreshing…</>
