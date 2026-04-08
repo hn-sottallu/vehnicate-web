@@ -81,7 +81,7 @@ const styles = `
     font-family: 'DM Mono', monospace;
     font-size: 9px;
     letter-spacing: 3px;
-    text-transform: uppercase;
+    text-transform: none;
     color: #999;
     margin-bottom: 28px;
     padding-left: 2px;
@@ -131,39 +131,6 @@ const styles = `
     text-align: center;
   }
 
-  .cover-arrow-btn {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: none;
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 40px;
-    padding: 12px 28px;
-    color: rgba(255,255,255,0.7);
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: all 0.25s;
-  }
-  .cover-arrow-btn:hover {
-    border-color: rgba(168,85,247,0.6);
-    color: white;
-    background: rgba(168,85,247,0.08);
-  }
-  .cover-arrow-btn .arrow-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #a855f7, #ec4899);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    transition: transform 0.25s;
-  }
-  .cover-arrow-btn:hover .arrow-icon { transform: translateX(3px); }
-
   .book-spread {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -183,7 +150,10 @@ const styles = `
     from { transform: rotateY(-8deg) scale(0.97); opacity: 0.7; }
     to   { transform: rotateY(0deg) scale(1); opacity: 1; }
   }
-
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.2; }
+  }
   .book-spread.flipping-right { animation: flipRight 0.4s ease forwards; }
   .book-spread.flipping-left  { animation: flipLeft  0.4s ease forwards; }
 
@@ -545,7 +515,7 @@ const PAGES = [
         <>
           <p className="page-body">When you first launch Opsin, tap <strong>Create account</strong> and fill in your details.</p>
           <div className="screenshot">
-            <img src="/signup_screen.jpeg" alt="Signup screen" style={{ width: "100%", borderRadius: 8, objectFit: "cover" }} />
+            <img src="/signup_screen.jpeg" alt="Signup screen" style={{ width: "100%", height: 200, borderRadius: 8, objectFit: "cover" }} />
           </div>
           
         </>
@@ -558,8 +528,8 @@ const PAGES = [
         <>
           <p className="page-body">After signup, register the vehicle you'll be scanning with.</p>
           <div style={{ display: "flex", gap: 8, margin: "12px 0" }}>
-            <img src="/garage.jpeg" alt="Garage" style={{ width: "50%", borderRadius: 8, objectFit: "cover" }} />
-            <img src="/add_vehicle.jpeg" alt="Add vehicle" style={{ width: "50%", borderRadius: 8, objectFit: "cover" }} />
+            <img src="/garage.jpeg" alt="Garage" style={{ width: "50%", height: 200, borderRadius: 8, objectFit: "cover" }} />
+            <img src="/add_vehicle.jpeg" alt="Add vehicle" style={{ width: "50%", height: 200, borderRadius: 8, objectFit: "cover" }} />
           </div>
           <p className="page-body" style={{ fontSize: 13 }}>
             You can register multiple vehicles and switch between them before starting any trip.
@@ -577,7 +547,7 @@ const PAGES = [
           <p className="page-body">From the home screen, select your vehicle and tap <strong>Start trip</strong>.</p>
           <div className="page-divider" />
           <div className="screenshot">
-            <img src="/App_home.jpeg" alt="App home" style={{ width: "100%", borderRadius: 8, objectFit: "cover" }} />
+            <img src="/App_home.jpeg" alt="App home" style={{ width: "100%", height: 200, borderRadius: 8, objectFit: "cover" }} />
           </div>
           {[
             ["1", "Mount your phone", "Use a windshield or dashboard mount incase of car and a traditional handlbar phone stand incase of bike. The phone must be fixed to the vehicle — not held."],
@@ -601,8 +571,9 @@ const PAGES = [
       content: (
         <>
           <p className="page-body">Opsin senses autonomously - you need not touch it.</p>
-          <div className="screenshot">
-            <img src="/dataCollection_screen.jpeg" alt="Data collection screen" style={{ width: "100%", borderRadius: 8, objectFit: "cover" }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "12px 0" }}>
+            <img src="/dataCollection_screen.jpeg" alt="Data collection screen" style={{ width: "100%", height: 150, borderRadius: 8, objectFit: "cover" }} />
+            <img src="/appOnMount.png" alt="App on mount" style={{ width: "100%", height: 150, borderRadius: 8, objectFit: "cover" }} />
           </div>
           <p className="page-body" style={{ fontSize: 13 }}>
             Tap <strong>End trip</strong> when done. Events upload automatically when connectivity is available.
@@ -702,10 +673,44 @@ export default function HNOpsinGuide() {
                 <div className="cover-divider" />
                 <p className="cover-publisher">vehnicate · version 1.0</p>
               </div>
-              <button className="cover-arrow-btn" onClick={() => setIsOpen(true)}>
-                <span>Open the manual</span>
-                <span className="arrow-icon">→</span>
-              </button>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+                <div style={{ position: "relative", cursor: "pointer" }} onClick={() => setIsOpen(true)}>
+                  {/* Steering wheel */}
+                  <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="36" cy="36" r="30" stroke="white" strokeWidth="2" fill="none" />
+                    <circle cx="36" cy="36" r="10" stroke="white" strokeWidth="2" fill="none" />
+                    <line x1="36" y1="26" x2="36" y2="6" stroke="white" strokeWidth="2" />
+                    <line x1="27.5" y1="29.5" x2="10" y2="52" stroke="white" strokeWidth="2" />
+                    <line x1="44.5" y1="29.5" x2="62" y2="52" stroke="white" strokeWidth="2" />
+                  </svg>
+
+                  {/* Blinking indicator arrow */}
+                  <div style={{
+                    position: "absolute",
+                    bottom: -4,
+                    right: -18,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 3,
+                    animation: "blink 1.1s ease-in-out infinite",
+                  }}>
+                    <span style={{ fontSize: 18, color: "#f5a623" }}>›</span>
+                    <span style={{ fontSize: 18, color: "#f5a623", opacity: 0.6 }}>›</span>
+                    <span style={{ fontSize: 18, color: "#f5a623", opacity: 0.3 }}>›</span>
+                  </div>
+                </div>
+
+                <span style={{
+                  fontFamily: "DM Mono, monospace",
+                  fontSize: 10,
+                  letterSpacing: 2,
+                  color: "rgba(255,255,255,0.3)",
+                  textTransform: "uppercase",
+                  animation: "blink 1.1s ease-in-out infinite",
+                }}>
+                  tap to open
+                </span>
+              </div>
             </div>
           </div>
         ) : (
