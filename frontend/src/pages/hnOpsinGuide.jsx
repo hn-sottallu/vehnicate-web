@@ -126,7 +126,7 @@ const styles = `
     font-family: 'DM Mono', monospace;
     font-size: 9px;
     letter-spacing: 2px;
-    text-transform: uppercase;
+    text-transform: none;
     color: #bbb;
     text-align: center;
   }
@@ -629,7 +629,7 @@ const PAGES = [
           ))}
           <div className="page-divider" />
           <p className="page-body" style={{ fontSize: 12, color: "#999", fontStyle: "italic" }}>
-            That's everything. Happy driving — and thank you for mapping the roads.
+            That's everything. Happy driving and thank you for mapping the roads.
           </p>
           <p style={{ fontFamily: "DM Mono", fontSize: 9, letterSpacing: 2, color: "#bbb", marginTop: 12, textTransform: "uppercase" }}>
             vehnicate · road-scout platform
@@ -662,82 +662,74 @@ export default function HNOpsinGuide() {
       <div id="opsin-guide">
         {!isOpen ? (
           <div className="book-scene">
-            <div className="cover-wrap">
-              <div className="cover-book">
-                <div className="cover-eyebrow">vehnicate · opsin app</div>
-                <div className="cover-logo">
-                  <img src="/hn-logo.png" alt="vehnicate" style={{ width: 32, height: 32, objectFit: "contain" }} />
-                </div>
-                <h1 className="cover-title">User Manual to vehnicate's Mobile App</h1>
-                <p className="cover-subtitle">Opsin: feel the roads!</p>
-                <div className="cover-divider" />
-                <p className="cover-publisher">vehnicate · version 1.0</p>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-                <div style={{ position: "relative", cursor: "pointer" }} onClick={() => setIsOpen(true)}>
-                  {/* Steering wheel */}
-                  <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="36" cy="36" r="30" stroke="white" strokeWidth="2" fill="none" />
-                    <circle cx="36" cy="36" r="10" stroke="white" strokeWidth="2" fill="none" />
-                    <line x1="36" y1="26" x2="36" y2="6" stroke="white" strokeWidth="2" />
-                    <line x1="27.5" y1="29.5" x2="10" y2="52" stroke="white" strokeWidth="2" />
-                    <line x1="44.5" y1="29.5" x2="62" y2="52" stroke="white" strokeWidth="2" />
-                  </svg>
+            <div className="cover-wrap" style={{ position: "relative", alignItems: "center" }}>
+              {/* Steering wheel above the book */}
+              <svg width="48" height="48" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="36" cy="36" r="30" stroke="white" strokeWidth="2" fill="none" />
+                <circle cx="36" cy="36" r="10" stroke="white" strokeWidth="2" fill="none" />
+                <line x1="36" y1="26" x2="36" y2="6" stroke="white" strokeWidth="2" />
+                <line x1="27.5" y1="29.5" x2="10" y2="52" stroke="white" strokeWidth="2" />
+                <line x1="44.5" y1="29.5" x2="62" y2="52" stroke="white" strokeWidth="2" />
+              </svg>
 
-                  {/* Blinking indicator arrow */}
-                  <div style={{
-                    position: "absolute",
-                    bottom: -4,
-                    right: -18,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 3,
-                    animation: "blink 1.1s ease-in-out infinite",
-                  }}>
-                    <span style={{ fontSize: 18, color: "#f5a623" }}>›</span>
-                    <span style={{ fontSize: 18, color: "#f5a623", opacity: 0.6 }}>›</span>
-                    <span style={{ fontSize: 18, color: "#f5a623", opacity: 0.3 }}>›</span>
+              {/* Book + right arrow side by side */}
+              <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
+                <div className="cover-book">
+                  <div className="cover-eyebrow">vehnicate · opsin app</div>
+                  <div className="cover-logo">
+                    <img src="/hn-logo.png" alt="vehnicate" style={{ width: 32, height: 32, objectFit: "contain" }} />
                   </div>
+                  <h1 className="cover-title">User Manual to vehnicate's Mobile App</h1>
+                  <p className="cover-subtitle">Opsin: feel the roads!</p>
+                  <div className="cover-divider" />
+                  <p className="cover-publisher">vehnicate · version 1.0</p>
                 </div>
 
-                <span style={{
-                  fontFamily: "DM Mono, monospace",
-                  fontSize: 10,
-                  letterSpacing: 2,
-                  color: "rgba(255,255,255,0.3)",
-                  textTransform: "uppercase",
-                  animation: "blink 1.1s ease-in-out infinite",
-                }}>
-                  tap to open
-                </span>
+                {/* Blinking arrow */}
+                <div
+                  onClick={() => setIsOpen(true)}
+                  style={{ cursor: "pointer", animation: "blink 1.1s ease-in-out infinite" }}
+                >
+                  <svg width="40" height="60" viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 4 L36 30 L8 56" stroke="#f5a623" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
         ) : (
           <div className="book-scene">
-            <div className={`book-spread${flipping ? ` flipping-${flipping}` : ""}`}>
-              <div className="page-left">
-                <div className="page-chapter">{current.left.chapter}</div>
-                <h2 className="page-title">{current.left.title}</h2>
-                {current.left.content}
-                <span className="page-num">{pageIdx * 2 + 1}</span>
-              </div>
-              <div className="page-right">
-                <div className="page-chapter">{current.right.chapter}</div>
-                <h2 className="page-title">{current.right.title}</h2>
-                {current.right.content}
-                <span className="page-num">{pageIdx * 2 + 2}</span>
-              </div>
-            </div>
-            <div className="book-controls">
+            <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 16 }}>
+              {/* Left button */}
               <button className="book-nav-btn" disabled={!!flipping}
-                onClick={() => pageIdx === 0 ? setIsOpen(false) : flip("left")}>
-                ← {pageIdx === 0 ? "back to cover" : "previous"}
+                onClick={() => pageIdx === 0 ? setIsOpen(false) : flip("left")}
+                style={{ flexShrink: 0 }}>
+                ←
               </button>
-              <span className="book-page-indicator">{pageIdx + 1} / {PAGES.length}</span>
-              <button className="book-nav-btn" disabled={!!flipping || pageIdx >= PAGES.length - 1}
-                onClick={() => flip("right")}>
-                next →
+
+              {/* Book spread */}
+              <div className={`book-spread${flipping ? ` flipping-${flipping}` : ""}`}
+                style={{ flex: 1 }}>
+                <div className="page-left">
+                  <div className="page-chapter">{current.left.chapter}</div>
+                  <h2 className="page-title">{current.left.title}</h2>
+                  {current.left.content}
+                  <span className="page-num">{pageIdx * 2 + 1}</span>
+                </div>
+                <div className="page-right">
+                  <div className="page-chapter">{current.right.chapter}</div>
+                  <h2 className="page-title">{current.right.title}</h2>
+                  {current.right.content}
+                  <span className="page-num">{pageIdx * 2 + 2}</span>
+                </div>
+              </div>
+
+              {/* Right button */}
+              <button className="book-nav-btn"
+                disabled={!!flipping || pageIdx >= PAGES.length - 1}
+                onClick={() => flip("right")}
+                style={{ flexShrink: 0 }}>
+                →
               </button>
             </div>
           </div>
