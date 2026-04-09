@@ -652,11 +652,12 @@ export default function HNOpsinGuide() {
   const [activeSide, setActiveSide] = useState("left");
   const [isMobile] = useState(() => window.innerWidth <= 600);
 
-  const flip = (dir) => {
+  const flip = (dir, targetSide = "left") => {
     if (flipping) return;
     setFlipping(dir);
     setTimeout(() => {
       setPageIdx(i => i + (dir === "right" ? 1 : -1));
+      setActiveSide(targetSide);
       setFlipping(null);
     }, 380);
   };
@@ -715,8 +716,7 @@ export default function HNOpsinGuide() {
                   } else if (pageIdx === 0) {
                     setIsOpen(false);
                   } else {
-                    flip("left");
-                    setActiveSide("right");
+                    flip("left", "right");
                   }
                 }}
                 style={{ flexShrink: 0 }}>
@@ -747,8 +747,7 @@ export default function HNOpsinGuide() {
                   if (isMobile && activeSide === "left") {
                     setActiveSide("right");
                   } else {
-                    flip("right");
-                    setActiveSide("left");
+                    flip("right", "left");
                   }
                 }}
                 style={{ flexShrink: 0 }}>
