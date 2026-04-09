@@ -141,7 +141,7 @@ const styles = `
       -8px 0 0 #ccc,
       0 24px 80px rgba(0,0,0,0.7),
       0 8px 24px rgba(0,0,0,0.4);
-    height: 580px;
+    height: 780px;
     overflow: hidden;
     animation: bookOpen 0.5s ease forwards;
   }
@@ -456,8 +456,11 @@ const styles = `
   .page-right .page-num { left: 32px; }
 
   @media (max-width: 600px) {
-    .book-spread { grid-template-columns: 1fr; }
-    .page-left { border-right: none; border-bottom: 1px solid rgba(0,0,0,0.08); }
+    .book-spread {
+      grid-template-columns: 1fr;
+      height: auto;
+      min-height: 520px;
+    }
     .cover-book { width: 280px; }
   }
 `;
@@ -646,6 +649,8 @@ export default function HNOpsinGuide() {
   const [isOpen, setIsOpen] = useState(false);
   const [pageIdx, setPageIdx] = useState(0);
   const [flipping, setFlipping] = useState(null);
+  const [activeSide, setActiveSide] = useState("left");
+  const [isMobile] = useState(() => window.innerWidth <= 600);
 
   const flip = (dir) => {
     if (flipping) return;
@@ -704,7 +709,16 @@ export default function HNOpsinGuide() {
             <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 16 }}>
               {/* Left button */}
               <button className="book-nav-btn" disabled={!!flipping}
-                onClick={() => pageIdx === 0 ? setIsOpen(false) : flip("left")}
+                onClick={() => {
+                  if (isMobile && activeSide === "right") {
+                    setActiveSide("left");
+                  } else if (pageIdx === 0) {
+                    setIsOpen(false);
+                  } else {
+                    flip("left");
+                    setActiveSide("right");
+                  }
+                }}
                 style={{ flexShrink: 0 }}>
                 ←
               </button>
@@ -712,13 +726,13 @@ export default function HNOpsinGuide() {
               {/* Book spread */}
               <div className={`book-spread${flipping ? ` flipping-${flipping}` : ""}`}
                 style={{ flex: 1 }}>
-                <div className="page-left">
+                <div className="page-left" style={{ display: (!isMobile || activeSide === "left") ? "" : "none" }}>
                   <div className="page-chapter">{current.left.chapter}</div>
                   <h2 className="page-title">{current.left.title}</h2>
                   {current.left.content}
                   <span className="page-num">{pageIdx * 2 + 1}</span>
                 </div>
-                <div className="page-right">
+                <div className="page-right" style={{ display: (!isMobile || activeSide === "right") ? "" : "none" }}>
                   <div className="page-chapter">{current.right.chapter}</div>
                   <h2 className="page-title">{current.right.title}</h2>
                   {current.right.content}
@@ -728,8 +742,15 @@ export default function HNOpsinGuide() {
 
               {/* Right button */}
               <button className="book-nav-btn"
-                disabled={!!flipping || pageIdx >= PAGES.length - 1}
-                onClick={() => flip("right")}
+                disabled={!!flipping || (pageIdx >= PAGES.length - 1 && (!isMobile || activeSide === "right"))}
+                onClick={() => {
+                  if (isMobile && activeSide === "left") {
+                    setActiveSide("right");
+                  } else {
+                    flip("right");
+                    setActiveSide("left");
+                  }
+                }}
                 style={{ flexShrink: 0 }}>
                 →
               </button>
