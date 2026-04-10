@@ -5,6 +5,7 @@ import WaitlistPage from "./pages/WaitlistPage";
 import MapPage from "./pages/MapPage";
 import HnOpsinGuide from "./pages/hnOpsinGuide";
 import "./styles/globals.css";
+import { Analytics } from "@vercel/analytics/react";
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -60,6 +61,7 @@ function App() {
   return (
     <div className="App">
       <AnimatedRoutes />
+      <Analytics />
     </div>
   );
 }
