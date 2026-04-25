@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 import requests
 from PIL import Image, ImageDraw, ImageFont
 import io
+from ellar_update import update_ellar
 
 """
 each time a new row comes into the "trips" table, a https request is triggered via ngrok
