@@ -27,7 +27,7 @@ const MapPage = () => {
           Don't find your place?{" "}
           <Link to="/guide">
             <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent font-medium cursor-pointer hover:opacity-80 transition-opacity">
-              Download the hn-Opsin app
+              Download the vehnWay app
             </span>
           </Link>{" "}
           and drive through your area to put it on the map.

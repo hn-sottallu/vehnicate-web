@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 import requests
 from PIL import Image, ImageDraw, ImageFont
 import io
-from ellar_update import update_ellar
+from hexagons_update import update_hexagons
 
 """
 each time a new row comes into the "trips" table, a https request is triggered via ngrok
@@ -170,6 +170,13 @@ def process_trip(tripid,vehicleid, starttime, endtime):
             .execute()
 
         inserted_events = insert_response.data
+
+        # ── NEW: update hexagons table ──────────────────────────
+        try:
+            update_hexagons(supabase_target, inserted_events)
+        except Exception as hexagons_err:
+            # Non-fatal: log and continue so images still process
+            print(f"[hexagons] update failed: {hexagons_err}")
 
         # Step 2: Fetch and map images
         images_to_insert = []

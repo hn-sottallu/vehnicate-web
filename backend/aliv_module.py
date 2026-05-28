@@ -173,8 +173,12 @@ class AlivRoadDefects:
         #print("NaT in timesent:", df['timesent'].isna().sum())
         df = self.phone_to_vehicle(df)
 
-        initialLat = round(df[(df.latitude != 0) & (df.longitude != 0)].iloc[0]['latitude'],4)
-        initialLon = round(df[(df.latitude != 0) & (df.longitude != 0)].iloc[0]['longitude'],4)
+        valid_gps = df[(df.latitude != 0) & (df.longitude != 0) & df.latitude.notna() & df.longitude.notna()]
+        if valid_gps.empty:
+            print("No valid GPS coordinates found, skipping analysis")
+            return {"speedbreakers": []}
+        initialLat = round(valid_gps.iloc[0]['latitude'], 4)
+        initialLon = round(valid_gps.iloc[0]['longitude'], 4)
 
         # ---- OG logic unchanged below ----
         Pitch = [0]

@@ -16,7 +16,7 @@ const styles = `
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  #opsin-guide {
+  #vehnWay-guide {
     background: #000 url('/vehnicate_wallpaper.png') center/cover no-repeat;
     min-height: 100vh;
     display: flex;
@@ -29,7 +29,7 @@ const styles = `
     overflow: hidden;
   }
 
-  #opsin-guide::before {
+  #vehnWay-guide::before {
     content: "";
     position: fixed;
     inset: 0;
@@ -491,7 +491,7 @@ const PAGES = [
       content: (
         <>
           <p className="page-body">
-            Opsin is <strong>not yet available on the Play Store.</strong> We're currently in an invite-only phase, collecting road data across select cities before the public launch.
+            vehnWay is <strong>not yet available on the Play Store.</strong> We're currently in an invite-only phase, collecting road data across select cities before the public launch.
           </p>
           <p className="page-body">In the meantime, you have two options to get started.</p>
           <div className="page-divider" />
@@ -500,7 +500,7 @@ const PAGES = [
             <div className="install-option-body">Download and sideload the APK on your Android device. Works on Android 8.0 and above.</div>
           </div>
           <a className="install-option" href="/hn-Opsin.apk" download style={{ color: "inherit" }}>
-            <div className="install-option-title" style={{ color: "#a855f7" }}>→ Download hn-Opsin.apk</div>
+            <div className="install-option-title" style={{ color: "#a855f7" }}>→ Download vehnWay.apk</div>
             <div className="install-option-body">Tap to download. Then open the file and allow installation from unknown sources when prompted.</div>
           </a>
         </>
@@ -518,7 +518,7 @@ const PAGES = [
       title: "Signing up",
       content: (
         <>
-          <p className="page-body">When you first launch Opsin, tap <strong>Create account</strong> and fill in your details.</p>
+          <p className="page-body">When you first launch vehnWay, tap <strong>Create account</strong> and fill in your details.</p>
           <div className="screenshot">
             <img src="/signup_screen.jpeg" alt="Signup screen" style={{ width: "100%", height: 200, borderRadius: 8, objectFit: "contain", background: "#fff" }} />
           </div>
@@ -575,7 +575,7 @@ const PAGES = [
       title: "During the drive",
       content: (
         <>
-          <p className="page-body">Opsin senses autonomously - you need not touch it.</p>
+          <p className="page-body">vehnWay senses autonomously - you need not touch it.</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "12px 0" }}>
             <img src="/dataCollection_screen.jpeg" alt="Data collection screen" style={{ width: "100%", height: 150, borderRadius: 8, objectFit: "contain", background: "#fff" }} />
             <img src="/appOnMount.png" alt="App on mount" style={{ width: "100%", height: 150, borderRadius: 8, objectFit: "contain", background: "#fff" }} />
@@ -608,7 +608,7 @@ const PAGES = [
               </div>
             ))}
           </div>
-          <p className="page-body" style={{ fontSize: 13 }}>Tap any segment to see the photos Opsin captured at that location.</p>
+          <p className="page-body" style={{ fontSize: 13 }}>Tap any segment to see the photos vehnWay captured at that location.</p>
         </>
       ),
     },
@@ -667,7 +667,7 @@ export default function HNOpsinGuide() {
   return (
     <>
       <style>{styles}</style>
-      <div id="opsin-guide">
+      <div id="vehnWay-guide">
         {!isOpen ? (
           <div className="book-scene">
             <div className="cover-wrap" style={{ position: "relative", alignItems: "center" }}>
@@ -683,12 +683,12 @@ export default function HNOpsinGuide() {
               {/* Book + right arrow side by side */}
               <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
                 <div className="cover-book">
-                  <div className="cover-eyebrow">vehnicate · opsin app</div>
+                  <div className="cover-eyebrow">vehnicate · vehnWay app</div>
                   <div className="cover-logo">
                     <img src="/hn-logo.png" alt="vehnicate" style={{ width: 32, height: 32, objectFit: "contain" }} />
                   </div>
                   <h1 className="cover-title">User Manual to vehnicate's Mobile App</h1>
-                  <p className="cover-subtitle">Opsin: feel the roads!</p>
+                  <p className="cover-subtitle">vehnWay: feel the roads!</p>
                   <div className="cover-divider" />
                   <p className="cover-publisher">vehnicate · version 1.0</p>
                 </div>

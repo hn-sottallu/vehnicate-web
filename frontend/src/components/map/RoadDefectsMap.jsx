@@ -58,8 +58,8 @@ async function fetchEventsForCells(cells, cachedCells) {
   const results = await Promise.all(
     chunks.map(async (chunk) => {
       const { data, error } = await supabase
-        .from("roaddefects")
-        .select("id, tripid, h3_index, path, parameter, start_timestamp, end_timestamp")
+        .from("hexagons")
+        .select("h3_index, location, parameters, event_id")
         .in("h3_index", chunk);
       if (error) { console.error("[supabase] roaddefects:", error); return []; }
       return data || [];
@@ -73,76 +73,74 @@ async function fetchImagesForEvents(eventIds) {
   if (!eventIds.length) return {};
   const { data, error } = await supabase
     .from("images")
-    .select("event_id, image_url")
+    .select("event_id, image_url, timestamp")
     .in("event_id", eventIds);
   if (error) { console.error("[supabase] images:", error); return {}; }
   const map = {};
   for (const row of data || []) {
     if (!map[row.event_id]) map[row.event_id] = [];
-    map[row.event_id].push(row.image_url);
+    map[row.event_id].push({ url: row.image_url, timestamp: row.timestamp }); // store both
   }
   return map;
 }
 
 // ─── Popup HTML (click → images) ─────────────────────────────────────────────
-function buildImagePopupHTML(events, imageMap) {
+function buildImagePopupHTML(row, param, imgs) {
+  const color   = getEventColor(param);
+  const lastEid = row.event_id[row.event_id.length - 1];
+
+  // Use timestamp from the first image if available
+  const timestamp = imgs.length > 0
+    ? imgs[0].timestamp.slice(0, 19).replace("T", " ")
+    : null;
+
   let html = `<div style="font-family:monospace;max-width:500px;">`;
-  for (const ev of events) {
-    const imgs = imageMap[ev.id] || [];
-    
-    const start = ev.start_timestamp.slice(0, 19).replace("T", " ");
-    const color = getEventColor(ev.parameter);
-    html += `
-      <div style="border-left:3px solid ${color};padding:8px 12px;
-        margin-bottom:10px;background:rgba(255,255,255,0.04);border-radius:0 6px 6px 0;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <span style="font-size:11px;color:#ccc;">${start}</span>
-          <span style="font-size:12px;font-weight:700;color:${color};
-            background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:99px;">
-            ⬡ ${ev.parameter.toFixed(3)}
-          </span>
-        </div>`;
-    if (imgs.length > 0) {
-      html += `
-        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;
-          scrollbar-width:thin;scrollbar-color:#fff transparent;">`;
-      for (const url of imgs.slice(0, 8)) {
-        html += `<img src="${url}" style="height:120px;border-radius:6px;flex-shrink:0;
-          object-fit:cover;cursor:pointer;" onclick="window.open('${url}','_blank')"/>`;
-      }
-      html += `</div>`;
-    } else {
-      html += `<div style="font-size:11px;color:#555;font-style:italic;">No images</div>`;
+  html += `
+    <div style="border-left:3px solid ${color};padding:8px 12px;
+      margin-bottom:10px;background:rgba(255,255,255,0.04);border-radius:0 6px 6px 0;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        ${timestamp
+          ? `<span style="font-size:11px;color:#ccc;">${timestamp}</span>`
+          : `<span style="font-size:11px;color:#ccc;">Event ${lastEid}</span>`}
+        <span style="font-size:12px;font-weight:700;color:${color};
+          background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:99px;">
+          ⬡ ${param.toFixed(3)}
+        </span>
+      </div>`;
+
+  if (imgs.length > 0) {
+    html += `<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;
+      scrollbar-width:thin;scrollbar-color:#fff transparent;">`;
+    for (const img of imgs.slice(0, 8)) {
+      html += `<img src="${img.url}" style="height:120px;border-radius:6px;flex-shrink:0;
+        object-fit:cover;cursor:pointer;" onclick="window.open('${img.url}','_blank')"/>`;
     }
     html += `</div>`;
+  } else {
+    html += `<div style="font-size:11px;color:#555;font-style:italic;">No images</div>`;
   }
-  return html + `</div>`;
+
+  html += `</div></div>`;
+  return html;
 }
 // ─── Hover tooltip HTML ───────────────────────────────────────────────────────
-function buildHoverHTML(events) {
-  const avgParam = events.reduce((s, e) => s + e.parameter, 0) / events.length;
-  const color = getEventColor(avgParam);
-  
-  const start = events[0].start_timestamp.slice(0, 19).replace("T", " ");
+function buildHoverHTML(row, param) {
+  const color = getEventColor(param);
+  const lastEid = row.event_id[row.event_id.length - 1];
   return `
     <div style="font-family:monospace;font-size:12px;min-width:180px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
         <span style="color:#ccc;font-weight:600;">Event ID</span>
-        <span style="color:#fff;">${events[0].id}</span>
+        <span style="color:#fff;">${lastEid}</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
         <span style="color:#ccc;font-weight:600;">Parameter</span>
-        <span style="font-weight:700;color:${color};">${avgParam.toFixed(3)}</span>
+        <span style="font-weight:700;color:${color};">${param.toFixed(3)}</span>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:${events.length > 1 ? '6px' : '0'};">
-        <span style="color:#ccc;font-weight:600;">Time</span>
-        <span style="color:#fff;">${start}</span>
-      </div>
-      ${events.length > 1 ? `
       <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="color:#ccc;font-weight:600;">Combined events</span>
-        <span style="color:#a855f7;font-weight:700;">${events.length}</span>
-      </div>` : ''}
+        <span style="color:#ccc;font-weight:600;">Detections</span>
+        <span style="color:#a855f7;font-weight:700;">${row.parameters.length}</span>
+      </div>
     </div>`;
 }
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -618,7 +616,8 @@ export default function RoadDefectsMap() {
       cells.forEach((c) => fetchedCells.current.add(c));
       if (!newEvents.length) return;
 
-      const newImages = await fetchImagesForEvents(newEvents.map((e) => e.id));
+      const allEventIds = newEvents.map((e) => e.event_id[e.event_id.length - 1]);
+      const newImages = await fetchImagesForEvents(allEventIds);
       Object.assign(imageCacheRef.current, newImages);
 
       const byHex = {};
@@ -644,18 +643,17 @@ export default function RoadDefectsMap() {
     return Math.max(1, meters / metersPerPixel);
   }
   // ── Draw hex ───────────────────────────────────────────────────────────────
-  function drawHex(hexId, events) {
+  function drawHex(hexId, rows) {
     const map = mapRef.current;
     if (!map) return;
 
-    // Remove existing layer group for this hex if any
     if (layerCacheRef.current[hexId]) {
       layerCacheRef.current[hexId].forEach(l => map.removeLayer(l));
     }
 
     const layers = [];
 
-    // ── 1. Hexagon — always transparent blue ──────────────────────────────────
+    // ── 1. Hexagon outline — always transparent blue ──────────────────────────
     const latLngs = h3.cellToBoundary(hexId).map(([lat, lng]) => [lat, lng]);
     const hexPolygon = L.polygon(latLngs, {
       color: "#4a71b0",
@@ -667,95 +665,51 @@ export default function RoadDefectsMap() {
     hexPolygon.addTo(map);
     layers.push(hexPolygon);
 
-    // ── 2. Group events by identical path ────────────────────────────────────
-    const pathGroups = {};
-    for (const ev of events) {
-      const key = JSON.stringify(ev.path);
-      if (!pathGroups[key]) pathGroups[key] = [];
-      pathGroups[key].push(ev);
-    }
+    // ── 2. One circle marker per hexagons row ─────────────────────────────────
+    for (const row of rows) {
+      const [lat, lon] = row.location;
+      const param = parseFloat(row.parameters[row.parameters.length - 1]); // latest detection
+      const lastEid    = row.event_id[row.event_id.length - 1];     // latest event_id
+      const color      = getEventColor(param);
 
-    // ── 3. Draw each path group ───────────────────────────────────────────────
-    for (const [pathKey, groupEvents] of Object.entries(pathGroups)) {
-      const path = JSON.parse(pathKey);
-      const avgParam = groupEvents.reduce((s, e) => s + e.parameter, 0) / groupEvents.length;
-      const color = getEventColor(avgParam);
-
-      let eventLayer;
-
-      if (path.length <= 1) {
-        // ── Single point → Circle marker ──────────────────────────────────────
-        const [lat, lon] = path[0];
-        eventLayer = L.circle([lat, lon], {
-          radius: 4, //previously 6 and it covered mostly the entire road.. ig 4 means lane level
-          color: color,
-          fillColor: color,
-          fillOpacity: 0.9,
-          weight: 1.5,
-        });
-      } else {
-        // ── Multiple points → Polyline ─────────────────────────────────────────
-        const centerLat = path[Math.floor(path.length / 2)][0];
-        const initialWeight = metersToPixels(map, 8, centerLat);
-        eventLayer = L.polyline(path, {
-          color: color,
-          weight: initialWeight,
-          opacity: 0.85,
-        });
-      
-      const updateWeight = () => {
-        const w = metersToPixels(map, 8, centerLat);
-        eventLayer.setStyle({ weight: w });
-      };
-      map.on("zoom", updateWeight);
-
-      // Clean up listener when layer is removed
-      eventLayer.on("remove", () => {
-        map.off("zoom", updateWeight);
+      const marker = L.circle([lat, lon], {
+        radius: 4,
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.9,
+        weight: 1.5,
       });
-      }
-      // Hover
-      eventLayer.on("mouseover", (e) => {
-        eventLayer.bindTooltip(buildHoverHTML(groupEvents), {
+
+      // Hover tooltip
+      marker.on("mouseover", (e) => {
+        marker.bindTooltip(buildHoverHTML(row, param), {
           sticky: true, opacity: 1, className: "rdm-tooltip",
         }).openTooltip(e.latlng);
-        if (path.length <= 1) {
-          eventLayer.setStyle({ fillOpacity: 1, weight: 3 });
-        } else {
-          const centerLat = path[Math.floor(path.length / 2)][0];
-          eventLayer.setStyle({ weight: metersToPixels(map, 12, centerLat), opacity: 1 }); // slightly wider on hover
-        }
+        marker.setStyle({ fillOpacity: 1, weight: 3 });
       });
 
-      eventLayer.on("mouseout", () => {
-        eventLayer.closeTooltip();
-        if (path.length <= 1) {
-          eventLayer.setStyle({ fillOpacity: 0.9, weight: 1.5 });
-        } else {
-          const centerLat = path[Math.floor(path.length / 2)][0];
-          eventLayer.setStyle({ weight: metersToPixels(map, 8, centerLat), opacity: 0.85 });
-        }
+      marker.on("mouseout", () => {
+        marker.closeTooltip();
+        marker.setStyle({ fillOpacity: 0.9, weight: 1.5 });
       });
 
-      // Click → image popup
-      eventLayer.on("click", async () => {
-        const missing = groupEvents.map(e => e.id).filter(id => !imageCacheRef.current[id]);
-        if (missing.length) {
-          Object.assign(imageCacheRef.current, await fetchImagesForEvents(missing));
+      // Click → image popup using last event_id
+      marker.on("click", async () => {
+        if (!imageCacheRef.current[lastEid]) {
+          Object.assign(imageCacheRef.current, await fetchImagesForEvents([lastEid]));
         }
-        eventLayer
-          .bindPopup(buildImagePopupHTML(groupEvents, imageCacheRef.current), {
+        marker
+          .bindPopup(buildImagePopupHTML(row, param, imageCacheRef.current[lastEid] || []), {
             maxWidth: 520,
             maxHeight: 460,
           })
           .openPopup();
       });
 
-      eventLayer.addTo(map);
-      layers.push(eventLayer);
+      marker.addTo(map);
+      layers.push(marker);
     }
 
-    // Store all layers for this hex so we can remove them later
     layerCacheRef.current[hexId] = layers;
   }
 
@@ -790,7 +744,8 @@ export default function RoadDefectsMap() {
       cells.forEach((c) => fetchedCells.current.add(c));
 
       if (newEvents.length) {
-        const newImages = await fetchImagesForEvents(newEvents.map((e) => e.id));
+        const allEventIds = newEvents.map((e) => e.event_id[e.event_id.length - 1]);
+        const newImages = await fetchImagesForEvents(allEventIds);
         Object.assign(imageCacheRef.current, newImages);
 
         const byHex = {};
