@@ -493,16 +493,6 @@ const PAGES = [
           <p className="page-body">
             vehnWay is <strong>not yet available on the Play Store.</strong> We're currently in an invite-only phase, collecting road data across select cities before the public launch.
           </p>
-          <p className="page-body">In the meantime, you have two options to get started.</p>
-          <div className="page-divider" />
-          <div className="install-option">
-            <div className="install-option-title">↓ Install the APK directly <span className="badge">available now</span></div>
-            <div className="install-option-body">Download and sideload the APK on your Android device. Works on Android 8.0 and above.</div>
-          </div>
-          <a className="install-option" href="/hn-Opsin.apk" download style={{ color: "inherit" }}>
-            <div className="install-option-title" style={{ color: "#a855f7" }}>→ Download vehnWay.apk</div>
-            <div className="install-option-body">Tap to download. Then open the file and allow installation from unknown sources when prompted.</div>
-          </a>
         </>
       ),
     },
